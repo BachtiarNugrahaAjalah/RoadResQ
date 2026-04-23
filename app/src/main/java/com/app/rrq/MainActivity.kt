@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import com.app.rrq.ui.theme.RoadResQTheme
+import com.app.rrq.ui.theme.pages.AppRoot
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +38,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@PreviewScreenSizes
+//@PreviewScreenSizes
 @Composable
 fun RoadResQApp() {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
@@ -89,6 +90,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     RoadResQTheme {
-        Greeting("Android")
+        AppRoot()
     }
 }
