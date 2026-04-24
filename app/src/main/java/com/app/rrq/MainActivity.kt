@@ -22,11 +22,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.navigation.compose.rememberNavController
 import com.app.rrq.navigation.AppNavHost
 import com.app.rrq.ui.theme.RoadResQTheme
-import com.app.rrq.ui.theme.pages.AppRoot
+import com.app.rrq.ui.pages.AppRoot
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +40,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-//@PreviewScreenSizes
 @Composable
 fun RoadResQApp() {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }

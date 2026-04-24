@@ -2,12 +2,12 @@ package com.app.rrq.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import com.app.rrq.HalamanAwal
 import com.app.rrq.SplashScreen
+import com.app.rrq.ui.pages.DaftarLaporanPage
+import com.app.rrq.ui.pages.KelolaPenggunaPage
 
 @Composable
 fun AppNavHost(navController: NavHostController){
@@ -20,6 +20,12 @@ fun AppNavHost(navController: NavHostController){
         }
         composable("halamanAwal"){
             HalamanAwal(navController)
+        }
+        composable("daftarLaporan") {
+            DaftarLaporanPage(navController)
+        }
+        composable("kelolaPengguna") {
+            KelolaPenggunaPage(navController)
         }
     }
 }
