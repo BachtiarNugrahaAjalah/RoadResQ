@@ -6,6 +6,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.app.rrq.DetailLaporan
+import com.app.rrq.HalamanAwal
+import com.app.rrq.SplashScreen
 import com.app.rrq.ui.pages.*
 import com.app.rrq.ui.auth.*
 
@@ -189,6 +192,9 @@ private fun handleAdminNavigation(index: Int, navController: NavHostController) 
                 launchSingleTop = true
                 restoreState = true
             }
+        }
+        composable("detailLaporan"){
+            DetailLaporan(navController)
         }
     }
 }
