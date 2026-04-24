@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.navigation.compose.rememberNavController
+import com.app.rrq.navigation.AppNavHost
 import com.app.rrq.ui.theme.RoadResQTheme
 import com.app.rrq.ui.theme.pages.AppRoot
 
@@ -32,7 +34,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RoadResQTheme {
-                RoadResQApp()
+                val navController = rememberNavController()
+                AppNavHost(navController)
             }
         }
     }
