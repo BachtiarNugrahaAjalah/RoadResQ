@@ -1,2 +1,0 @@
-package com.app.rrq.ui.theme.pages
-
