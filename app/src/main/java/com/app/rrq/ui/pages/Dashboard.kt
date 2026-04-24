@@ -1,4 +1,4 @@
-package com.app.rrq.ui.theme.pages
+package com.app.rrq.ui.pages
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -40,13 +40,18 @@ fun AppRoot(isAdmin: Boolean = false) {
 // SCREEN 1 — USER DASHBOARD (Rapli)
 // ═══════════════════════════════════════════════════════════════
 @Composable
-fun UserHomeScreen() {
-    var selectedTab by remember { mutableStateOf(0) }
+fun UserHomeScreen(
+    onNavigate: (Int) -> Unit = {}
+) {
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
         containerColor = BackgroundGray,
         bottomBar = {
-            UserBottomBar(selected = selectedTab, onSelect = { selectedTab = it })
+            UserBottomBar(selected = selectedTab, onSelect = { 
+                selectedTab = it 
+                onNavigate(it)
+            })
         }
     ) { innerPadding ->
         Column(
@@ -94,12 +99,11 @@ fun UserHomeScreen() {
                                 fontSize = 13.sp
                             )
                         }
-                        BellButton(iconRes = R.drawable.ic_bell) // ← ic_bell.xml
+                        BellButton(iconRes = R.drawable.ic_bell)
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // ── Stat Row ──────────────────────────────────────────
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -113,7 +117,6 @@ fun UserHomeScreen() {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Aksi Cepat ───────────────────────────────────────────────
             SectionTitle(title = "Aksi Cepat", modifier = Modifier.padding(horizontal = 20.dp))
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -126,14 +129,14 @@ fun UserHomeScreen() {
                 QuickActionCard(
                     label     = "Buat Laporan",
                     sublabel  = "Lapor kerusakan",
-                    iconRes   = R.drawable.ic_add_laporan,   // ← ic_note_add.xml
+                    iconRes   = R.drawable.ic_add_laporan,
                     isPrimary = true,
                     modifier  = Modifier.weight(1f)
                 )
                 QuickActionCard(
                     label     = "Riwayat",
                     sublabel  = "Lihat semua",
-                    iconRes   = R.drawable.ic_history,    // ← ic_history.xml
+                    iconRes   = R.drawable.ic_history,
                     isPrimary = false,
                     modifier  = Modifier.weight(1f)
                 )
@@ -162,8 +165,8 @@ fun UserHomeScreen() {
             ReportItemCard(
                 title        = "Jalan Berlubang",
                 subtitle     = "Jl untung suropati",
-                leadIconRes  = R.drawable.ic_add_laporan,      // ← ic_note_add.xml
-                trailIconRes = R.drawable.ic_arrow_right,  // ← ic_chevron_right.xml
+                leadIconRes  = R.drawable.ic_add_laporan,
+                trailIconRes = R.drawable.ic_arrow_right,
                 modifier     = Modifier.padding(horizontal = 20.dp)
             )
 
@@ -287,52 +290,22 @@ fun ReportItemCard(
     }
 }
 
-@Composable
-fun UserBottomBar(selected: Int, onSelect: (Int) -> Unit) {
-    val items = listOf(
-        Pair("Beranda", R.drawable.ic_home),      // ic_home.xml
-        Pair("Lapor",   R.drawable.ic_add_laporan),  // ic_note_add.xml
-        Pair("Riwayat", R.drawable.ic_history),   // ic_history.xml
-        Pair("Profil",  R.drawable.ic_user)    // ic_profile.xml
-    )
-    NavigationBar(containerColor = CardWhite, tonalElevation = 4.dp) {
-        items.forEachIndexed { idx, (label, iconRes) ->
-            val isSelected = selected == idx
-            NavigationBarItem(
-                selected = isSelected,
-                onClick  = { onSelect(idx) },
-                icon = {
-                    Image(
-                        painter     = painterResource(id = iconRes),
-                        contentDescription = label,
-                        modifier    = Modifier.size(22.dp),
-                        colorFilter = ColorFilter.tint(
-                            if (isSelected) TealPrimary else TextSecondary
-                        )
-                    )
-                },
-                label  = { Text(label, fontSize = 11.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedTextColor   = TealPrimary,
-                    unselectedTextColor = TextSecondary,
-                    indicatorColor      = TealLight
-                )
-            )
-        }
-    }
-}
-
 // ═══════════════════════════════════════════════════════════════
 // SCREEN 2 — ADMIN DASHBOARD (030_ILKOM)
 // ═══════════════════════════════════════════════════════════════
 @Composable
-fun AdminHomeScreen() {
-    var selectedTab by remember { mutableStateOf(0) }
+fun AdminHomeScreen(
+    onNavigate: (Int) -> Unit = {}
+) {
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
         containerColor = BackgroundGray,
         bottomBar = {
-            AdminBottomBar(selected = selectedTab, onSelect = { selectedTab = it })
+            AdminBottomBar(selected = selectedTab, onSelect = { 
+                selectedTab = it 
+                onNavigate(it)
+            })
         }
     ) { innerPadding ->
         Column(
@@ -341,7 +314,6 @@ fun AdminHomeScreen() {
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // ── Teal Header ──────────────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -371,13 +343,12 @@ fun AdminHomeScreen() {
                             fontSize = 13.sp
                         )
                     }
-                    BellButton(iconRes = R.drawable.ic_bell) // ← ic_bell.xml
+                    BellButton(iconRes = R.drawable.ic_bell)
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ── Total Laporan ─────────────────────────────────────────────
             Card(
                 modifier  = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                 shape     = RoundedCornerShape(18.dp),
@@ -400,7 +371,6 @@ fun AdminHomeScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── 2x2 Stat Grid ─────────────────────────────────────────────
             Column(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -411,7 +381,7 @@ fun AdminHomeScreen() {
                         label       = "Laporan Baru",
                         iconBgColor = Color(0xFFFEF3C7),
                         iconTint    = OrangeAccent,
-                        iconRes     = R.drawable.ic_schedule,   // ← ic_schedule.xml
+                        iconRes     = R.drawable.ic_schedule,
                         modifier    = Modifier.weight(1f)
                     )
                     AdminStatCard(
@@ -419,7 +389,7 @@ fun AdminHomeScreen() {
                         label       = "Diproses",
                         iconBgColor = TealLight,
                         iconTint    = TealPrimary,
-                        iconRes     = R.drawable.ic_document, // ← ic_description.xml
+                        iconRes     = R.drawable.ic_document,
                         modifier    = Modifier.weight(1f)
                     )
                 }
@@ -429,7 +399,7 @@ fun AdminHomeScreen() {
                         label       = "Selesai",
                         iconBgColor = Color(0xFFDCFCE7),
                         iconTint    = GreenAccent,
-                        iconRes     = R.drawable.ic_check, // ← ic_check_circle.xml
+                        iconRes     = R.drawable.ic_check,
                         modifier    = Modifier.weight(1f)
                     )
                     AdminStatCard(
@@ -437,7 +407,7 @@ fun AdminHomeScreen() {
                         label       = "Prioritas Tinggi",
                         iconBgColor = Color(0xFFFEE2E2),
                         iconTint    = RedAccent,
-                        iconRes     = R.drawable.ic_alert,      // ← ic_warning.xml
+                        iconRes     = R.drawable.ic_alert,
                         modifier    = Modifier.weight(1f)
                     )
                 }
@@ -445,7 +415,6 @@ fun AdminHomeScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Kelola Laporan CTA ────────────────────────────────────────
             Card(
                 modifier  = Modifier.fillMaxWidth().padding(horizontal = 20.dp).clickable { },
                 shape     = RoundedCornerShape(18.dp),
@@ -464,7 +433,7 @@ fun AdminHomeScreen() {
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
-                            painter     = painterResource(id = R.drawable.ic_list_checks), // ← ic_checklist.xml
+                            painter     = painterResource(id = R.drawable.ic_list_checks),
                             contentDescription = "Kelola Laporan",
                             modifier    = Modifier.size(24.dp),
                             colorFilter = ColorFilter.tint(Color.White)
@@ -523,12 +492,47 @@ fun AdminStatCard(
 }
 
 @Composable
+fun UserBottomBar(selected: Int, onSelect: (Int) -> Unit) {
+    val items = listOf(
+        Pair("Beranda", R.drawable.ic_home),
+        Pair("Lapor",   R.drawable.ic_add_laporan),
+        Pair("Riwayat", R.drawable.ic_history),
+        Pair("Profil",  R.drawable.ic_user)
+    )
+    NavigationBar(containerColor = CardWhite, tonalElevation = 4.dp) {
+        items.forEachIndexed { idx, (label, iconRes) ->
+            val isSelected = selected == idx
+            NavigationBarItem(
+                selected = isSelected,
+                onClick  = { onSelect(idx) },
+                icon = {
+                    Image(
+                        painter     = painterResource(id = iconRes),
+                        contentDescription = label,
+                        modifier    = Modifier.size(22.dp),
+                        colorFilter = ColorFilter.tint(
+                            if (isSelected) TealPrimary else TextSecondary
+                        )
+                    )
+                },
+                label  = { Text(label, fontSize = 11.sp) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedTextColor   = TealPrimary,
+                    unselectedTextColor = TextSecondary,
+                    indicatorColor      = TealLight
+                )
+            )
+        }
+    }
+}
+
+@Composable
 fun AdminBottomBar(selected: Int, onSelect: (Int) -> Unit) {
     val items = listOf(
-        Pair("Beranda",  R.drawable.ic_home),       // ic_home.xml
-        Pair("Laporan",  R.drawable.ic_list_checks),  // ic_checklist.xml
-        Pair("Pengguna", R.drawable.ic_users),      // ic_group.xml
-        Pair("Profil",   R.drawable.ic_settings)     // ic_profile.xml
+        Pair("Beranda",  R.drawable.ic_home),
+        Pair("Laporan",  R.drawable.ic_list_checks),
+        Pair("Pengguna", R.drawable.ic_users),
+        Pair("Profil",   R.drawable.ic_user)
     )
     NavigationBar(containerColor = CardWhite, tonalElevation = 4.dp) {
         items.forEachIndexed { idx, (label, iconRes) ->
