@@ -33,7 +33,9 @@ val RoadResQLightBg = Color(0xFFF0F4F8)
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    onBack: () -> Unit = {},
+    onNavigateToUserDashboard: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -79,19 +81,19 @@ fun LoginScreen(
         ) {
 
             IconButton(
-                onClick = {},
+                onClick = onBack,
                 modifier = Modifier.offset(x = (-12).dp)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = null
+                    contentDescription = "Kembali"
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Image(
-                painter = painterResource(id = R.drawable.road),
+                painter = painterResource(id = R.drawable.logo),
                 contentDescription = null,
                 modifier = Modifier
                     .size(100.dp)
@@ -184,7 +186,8 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                    if (validate()) onLoginSuccess()
+//                    if (validate()) onLoginSuccess()
+                    onNavigateToUserDashboard()
                 },
                 modifier = Modifier
                     .fillMaxWidth()

@@ -47,7 +47,7 @@ fun SplashScreen(navController: NavController){
     ){
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
-                painter = painterResource(id = R.drawable.logo),
+                painter = painterResource(id = R.drawable.ic_logo),
                 contentDescription = "logo",
                 modifier = Modifier.size(120.dp)
                     .clip(RoundedCornerShape(20.dp))

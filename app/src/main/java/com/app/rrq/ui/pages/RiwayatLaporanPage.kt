@@ -24,10 +24,12 @@ import androidx.compose.ui.unit.sp
 import com.app.rrq.data.LaporanData
 import com.app.rrq.model.Laporan
 import com.app.rrq.ui.theme.RoadResQTheme
+import com.app.rrq.ui.theme.BackgroundGray
 
 @Composable
 fun RiwayatLaporanPage(
     modifier: Modifier = Modifier,
+    onNavigate: (Int) -> Unit = {},
     onNavigateToDetail: (Int) -> Unit = {}
 ) {
     var selectedFilter by remember { mutableStateOf("Semua") }
@@ -40,7 +42,10 @@ fun RiwayatLaporanPage(
 
     Scaffold(
         modifier = modifier,
-        containerColor = Color(0xFFF8F9FA)
+        containerColor = BackgroundGray,
+        bottomBar = {
+            UserBottomBar(selected = 2, onSelect = onNavigate)
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier

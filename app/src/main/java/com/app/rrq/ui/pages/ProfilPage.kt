@@ -24,9 +24,14 @@ import androidx.compose.ui.unit.sp
 import com.app.rrq.ui.theme.*
 import com.app.rrq.R
 
+// ═══════════════════════════════════════════════════════════════
+// SCREEN — USER PROFILE (Rapli)
+// ═══════════════════════════════════════════════════════════════
+
 @Composable
 fun UserProfileScreen(
-    onNavigate: (Int) -> Unit = {}
+    onNavigate: (Int) -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(3) } // Profil aktif (index 3)
 
@@ -45,6 +50,7 @@ fun UserProfileScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
+            // ── Teal Header dengan Avatar ─────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -56,6 +62,7 @@ fun UserProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Avatar dengan inisial
                     Box(
                         modifier = Modifier
                             .size(80.dp)
@@ -87,6 +94,7 @@ fun UserProfileScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // ── Info Card ─────────────────────────────────────────────
             ProfileInfoCard(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 items = listOf(
@@ -105,11 +113,12 @@ fun UserProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // ── Menu Card ─────────────────────────────────────────────
             ProfileMenuCard(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 items = listOf(
                     ProfileMenuItem(
-                        iconRes = R.drawable.ic_settings, // Diganti karena ic_pen_line tidak ada
+                        iconRes = R.drawable.ic_pen_line,
                         label   = "Edit Profil"
                     ),
                     ProfileMenuItem(
@@ -125,16 +134,24 @@ fun UserProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LogoutButton(modifier = Modifier.padding(horizontal = 20.dp))
+            // ── Tombol Keluar ─────────────────────────────────────────
+            LogoutButton(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                onClick = onLogout
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// SCREEN — ADMIN PROFILE (030_ILKOM A_FIKI SULISTIAWAN)
+// ═══════════════════════════════════════════════════════════════
 @Composable
 fun AdminProfileScreen(
-    onNavigate: (Int) -> Unit = {}
+    onNavigate: (Int) -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(3) } // Profil aktif
 
@@ -153,6 +170,7 @@ fun AdminProfileScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
+            // ── Teal Header dengan Avatar Admin ───────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -164,6 +182,7 @@ fun AdminProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Avatar dengan badge admin
                     Box(contentAlignment = Alignment.BottomEnd) {
                         Box(
                             modifier = Modifier
@@ -179,6 +198,7 @@ fun AdminProfileScreen(
                                 color = Color.White
                             )
                         }
+                        // Badge shield orange
                         Box(
                             modifier = Modifier
                                 .size(26.dp)
@@ -207,6 +227,7 @@ fun AdminProfileScreen(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
+                    // Badge "Administrator"
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
@@ -234,6 +255,7 @@ fun AdminProfileScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // ── Info Card (Email + Telepon + Peran) ───────────────────
             ProfileInfoCard(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 items = listOf(
@@ -257,15 +279,16 @@ fun AdminProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // ── Menu Card ─────────────────────────────────────────────
             ProfileMenuCard(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 items = listOf(
                     ProfileMenuItem(
-                        iconRes = R.drawable.ic_settings, // Diganti karena ic_pen_line tidak ada
+                        iconRes = R.drawable.ic_pen_line,
                         label   = "Edit Profil"
                     ),
                     ProfileMenuItem(
-                        iconRes = R.drawable.ic_history, // Diganti karena ic_chart_column tidak ada
+                        iconRes = R.drawable.ic_chart_column,
                         label   = "Laporan Statistik"
                     ),
                     ProfileMenuItem(
@@ -277,12 +300,20 @@ fun AdminProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LogoutButton(modifier = Modifier.padding(horizontal = 20.dp))
+            // ── Tombol Keluar ─────────────────────────────────────────
+            LogoutButton(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                onClick = onLogout
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
+
+// ─────────────────────────────────────────────
+// DATA MODELS
+// ─────────────────────────────────────────────
 
 data class ProfileInfoItem(
     @param:DrawableRes val iconRes: Int,
@@ -296,6 +327,11 @@ data class ProfileMenuItem(
     val onClick: () -> Unit = {}
 )
 
+// ─────────────────────────────────────────────
+// SHARED PROFILE COMPONENTS
+// ─────────────────────────────────────────────
+
+/** Card berisi baris info (email, telepon, peran) */
 @Composable
 fun ProfileInfoCard(
     items: List<ProfileInfoItem>,
@@ -315,6 +351,7 @@ fun ProfileInfoCard(
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Icon bulat teal muda
                     Box(
                         modifier = Modifier
                             .size(38.dp)
@@ -347,6 +384,7 @@ fun ProfileInfoCard(
                         )
                     }
                 }
+                // Divider antar item, kecuali yang terakhir
                 if (index < items.lastIndex) {
                     HorizontalDivider(
                         modifier  = Modifier.padding(horizontal = 16.dp),
@@ -359,6 +397,7 @@ fun ProfileInfoCard(
     }
 }
 
+/** Card berisi menu navigasi profil */
 @Composable
 fun ProfileMenuCard(
     items: List<ProfileMenuItem>,
@@ -421,12 +460,13 @@ fun ProfileMenuCard(
     }
 }
 
+/** Tombol Keluar merah dengan border */
 @Composable
-fun LogoutButton(modifier: Modifier = Modifier) {
+fun LogoutButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     val redColor = Color(0xFFEF4444)
 
     OutlinedButton(
-        onClick  = { },
+        onClick  = onClick,
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp),
@@ -438,7 +478,7 @@ fun LogoutButton(modifier: Modifier = Modifier) {
         border = androidx.compose.foundation.BorderStroke(1.dp, redColor.copy(alpha = 0.4f))
     ) {
         Image(
-            painter     = painterResource(id = R.drawable.ic_arrow_right),
+            painter     = painterResource(id = R.drawable.ic_log_out),
             contentDescription = "Keluar",
             modifier    = Modifier.size(18.dp),
             colorFilter = ColorFilter.tint(redColor)
@@ -452,6 +492,10 @@ fun LogoutButton(modifier: Modifier = Modifier) {
         )
     }
 }
+
+// ─────────────────────────────────────────────
+// PREVIEWS
+// ─────────────────────────────────────────────
 
 @Preview(showBackground = true, showSystemUi = true, name = "User Profile")
 @Composable
