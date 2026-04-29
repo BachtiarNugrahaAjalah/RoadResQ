@@ -46,6 +46,9 @@ fun AppNavigation() {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
+                },
+                onNavigateToAdminDashboard = {
+                    navController.navigate(Screen.Home.route)
                 }
             )
         }

@@ -24,11 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
 import com.app.rrq.R
+import com.app.rrq.data.UserData
+import com.app.rrq.model.User
 import com.app.rrq.ui.theme.*
 
-// ─────────────────────────────────────────────
-// ENTRY POINT
-// ─────────────────────────────────────────────
 @Composable
 fun AppRoot(isAdmin: Boolean = false) {
     MaterialTheme {
@@ -36,20 +35,19 @@ fun AppRoot(isAdmin: Boolean = false) {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SCREEN 1 — USER DASHBOARD (Rapli)
-// ═══════════════════════════════════════════════════════════════
 @Composable
 fun UserHomeScreen(
     onNavigate: (Int) -> Unit = {}
 ) {
+    var user = UserData.dataUser[1]
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
         containerColor = BackgroundGray,
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
-            UserBottomBar(selected = selectedTab, onSelect = { 
-                selectedTab = it 
+            UserBottomBar(selected = selectedTab, onSelect = {
+                selectedTab = it
                 onNavigate(it)
             })
         }
@@ -71,6 +69,12 @@ fun UserHomeScreen(
                     .padding(horizontal = 20.dp, vertical = 24.dp)
             ) {
                 Column {
+                    Spacer(modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsTopHeight(WindowInsets.statusBars)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -84,7 +88,7 @@ fun UserHomeScreen(
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "Rapli",
+                                    text = user.name,
                                     color = Color.White,
                                     fontSize = 26.sp,
                                     fontWeight = FontWeight.Bold
@@ -290,17 +294,16 @@ fun ReportItemCard(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SCREEN 2 — ADMIN DASHBOARD (030_ILKOM)
-// ═══════════════════════════════════════════════════════════════
 @Composable
 fun AdminHomeScreen(
     onNavigate: (Int) -> Unit = {}
 ) {
+    var user = UserData.dataUser[2]
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
         containerColor = BackgroundGray,
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             AdminBottomBar(selected = selectedTab, onSelect = { 
                 selectedTab = it 
@@ -323,27 +326,40 @@ fun AdminHomeScreen(
                     )
                     .padding(horizontal = 20.dp, vertical = 28.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Column {
-                        Text("Halo Admin,",  color = Color.White.copy(alpha = 0.85f), fontSize = 14.sp)
-                        Text(
-                            text = "030_ILKOM",
-                            color = Color.White,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Pantau & verifikasi laporan masuk hari ini.",
-                            color = Color.White.copy(alpha = 0.85f),
-                            fontSize = 13.sp
-                        )
+                Column {
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .windowInsetsTopHeight(WindowInsets.statusBars)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Column {
+                            Text(
+                                "Halo Admin,",
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = user.name,
+                                color = Color.White,
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Pantau & verifikasi laporan masuk hari ini.",
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 13.sp
+                            )
+                        }
+                        BellButton(iconRes = R.drawable.ic_bell)
                     }
-                    BellButton(iconRes = R.drawable.ic_bell)
                 }
             }
 
@@ -364,7 +380,12 @@ fun AdminHomeScreen(
                         letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "3", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = TealPrimary)
+                    Text(
+                        text = "3",
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TealPrimary
+                    )
                     Text(text = "Semua laporan masuk", fontSize = 13.sp, color = TextSecondary)
                 }
             }
@@ -451,8 +472,6 @@ fun AdminHomeScreen(
         }
     }
 }
-
-// ───── Sub-components (Admin) ─────────────────────────────────────
 
 @Composable
 fun AdminStatCard(
@@ -561,10 +580,6 @@ fun AdminBottomBar(selected: Int, onSelect: (Int) -> Unit) {
     }
 }
 
-// ─────────────────────────────────────────────
-// SHARED COMPONENTS
-// ─────────────────────────────────────────────
-
 @Composable
 fun BellButton(@DrawableRes iconRes: Int) {
     Box(
@@ -594,10 +609,6 @@ fun SectionTitle(title: String, modifier: Modifier = Modifier) {
         modifier = modifier
     )
 }
-
-// ─────────────────────────────────────────────
-// PREVIEWS
-// ─────────────────────────────────────────────
 
 @Preview(showBackground = true, showSystemUi = true, name = "User Screen")
 @Composable

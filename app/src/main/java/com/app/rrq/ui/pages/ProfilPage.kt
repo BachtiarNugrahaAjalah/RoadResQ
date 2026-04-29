@@ -23,16 +23,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.rrq.ui.theme.*
 import com.app.rrq.R
-
-// ═══════════════════════════════════════════════════════════════
-// SCREEN — USER PROFILE (Rapli)
-// ═══════════════════════════════════════════════════════════════
+import com.app.rrq.model.User
+import com.app.rrq.data.UserData
 
 @Composable
 fun UserProfileScreen(
     onNavigate: (Int) -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
+    var user = UserData.dataUser[1]
     var selectedTab by remember { mutableIntStateOf(3) } // Profil aktif (index 3)
 
     Scaffold(
@@ -50,7 +49,6 @@ fun UserProfileScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // ── Teal Header dengan Avatar ─────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -62,7 +60,6 @@ fun UserProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Avatar dengan inisial
                     Box(
                         modifier = Modifier
                             .size(80.dp)
@@ -71,7 +68,7 @@ fun UserProfileScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "R",
+                            text = user.name.get(0).toString(),
                             fontSize = 36.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -79,7 +76,7 @@ fun UserProfileScreen(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Rapli",
+                        text = user.name,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -101,19 +98,18 @@ fun UserProfileScreen(
                     ProfileInfoItem(
                         iconRes  = R.drawable.ic_email,
                         label    = "EMAIL",
-                        value    = "tbuyut0@gmail.com"
+                        value    = user.email
                     ),
                     ProfileInfoItem(
                         iconRes  = R.drawable.ic_phone,
                         label    = "NOMOR TELEPON",
-                        value    = "08157234946"
+                        value    = user.phone
                     )
                 )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Menu Card ─────────────────────────────────────────────
             ProfileMenuCard(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 items = listOf(
@@ -134,7 +130,6 @@ fun UserProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Tombol Keluar ─────────────────────────────────────────
             LogoutButton(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 onClick = onLogout
@@ -145,14 +140,12 @@ fun UserProfileScreen(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SCREEN — ADMIN PROFILE (030_ILKOM A_FIKI SULISTIAWAN)
-// ═══════════════════════════════════════════════════════════════
 @Composable
 fun AdminProfileScreen(
     onNavigate: (Int) -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
+    var user = UserData.dataUser[2]
     var selectedTab by remember { mutableIntStateOf(3) } // Profil aktif
 
     Scaffold(
@@ -182,7 +175,6 @@ fun AdminProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Avatar dengan badge admin
                     Box(contentAlignment = Alignment.BottomEnd) {
                         Box(
                             modifier = Modifier
@@ -192,7 +184,7 @@ fun AdminProfileScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "0A",
+                                text = user.name.get(0).toString(),
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -203,13 +195,12 @@ fun AdminProfileScreen(
                             modifier = Modifier
                                 .size(26.dp)
                                 .clip(RoundedCornerShape(50))
-                                .background(OrangeAccent)
-                                .offset(x = 4.dp, y = 4.dp),
+                                .background(OrangeAccent),
                             contentAlignment = Alignment.Center
                         ) {
                             Image(
                                 painter     = painterResource(id = R.drawable.ic_shield),
-                                contentDescription = "Admin",
+                                contentDescription = user.role.toString(),
                                 modifier    = Modifier.size(14.dp),
                                 colorFilter = ColorFilter.tint(Color.White)
                             )
@@ -219,7 +210,7 @@ fun AdminProfileScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "030_ILKOM A_FIKI SULISTIAWAN",
+                        text = user.name,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -255,19 +246,18 @@ fun AdminProfileScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ── Info Card (Email + Telepon + Peran) ───────────────────
             ProfileInfoCard(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 items = listOf(
                     ProfileInfoItem(
                         iconRes = R.drawable.ic_email,
                         label   = "EMAIL",
-                        value   = "fikisulistiawan@gmail.com"
+                        value   = user.email
                     ),
                     ProfileInfoItem(
                         iconRes = R.drawable.ic_phone,
                         label   = "NOMOR TELEPON",
-                        value   = "08256436345"
+                        value   = user.phone
                     ),
                     ProfileInfoItem(
                         iconRes = R.drawable.ic_shield,
@@ -326,10 +316,6 @@ data class ProfileMenuItem(
     val label: String,
     val onClick: () -> Unit = {}
 )
-
-// ─────────────────────────────────────────────
-// SHARED PROFILE COMPONENTS
-// ─────────────────────────────────────────────
 
 /** Card berisi baris info (email, telepon, peran) */
 @Composable
@@ -492,10 +478,6 @@ fun LogoutButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
         )
     }
 }
-
-// ─────────────────────────────────────────────
-// PREVIEWS
-// ─────────────────────────────────────────────
 
 @Preview(showBackground = true, showSystemUi = true, name = "User Profile")
 @Composable

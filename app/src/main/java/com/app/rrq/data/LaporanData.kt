@@ -2,6 +2,7 @@ package com.app.rrq.data
 
 import com.app.rrq.R
 import com.app.rrq.model.Laporan
+import kotlin.collections.listOf
 
 object LaporanData {
     val datareal = listOf(
@@ -54,6 +55,49 @@ object LaporanData {
             Gambar = R.drawable.img,
             Status = "Selesai",
             Tanggal = "19 Apr 2026"
+        )
+    )
+
+    val laporanList = listOf(
+        Laporan(
+            "yaya",
+            "",
+            "SEDANG",
+            "jl.situ",
+            "",
+            0,
+            "Ditolak",
+            "24 Apr"
+        ),
+        Laporan(
+            "ada apa ya",
+            "",
+            "RENDAH",
+            "Jl. yuk",
+            "",
+            0,
+            "Diverifikasi",
+            "23 Apr"
+        ),
+        Laporan(
+            "besar kepala",
+            "",
+            "TINGGI",
+            "jl.in aja dulu",
+            "",
+            0,
+            "Selesai",
+            "23 Apr"
+        ),
+        Laporan(
+            "Marka tidak terlihat",
+            "",
+            "SEDANG",
+            "Jl. raya",
+            "",
+            0,
+            "Menunggu",
+            "22 Apr"
         )
     )
 }

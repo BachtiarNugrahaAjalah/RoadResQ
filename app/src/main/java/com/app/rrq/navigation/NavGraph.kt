@@ -6,30 +6,34 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.app.rrq.DetailLaporan
-import com.app.rrq.HalamanAwal
-import com.app.rrq.SplashScreen
 import com.app.rrq.ui.pages.*
 import com.app.rrq.ui.auth.*
+import com.app.rrq.ui.pages.admin.DaftarLaporanPage
+import com.app.rrq.ui.pages.admin.KelolaPenggunaPage
+import com.app.rrq.ui.pages.admin.VerifikasiLaporanPage
+import com.app.rrq.ui.pages.user.BuatLaporanPage
+import com.app.rrq.ui.pages.user.DetailLaporanPage
+import com.app.rrq.ui.pages.user.RiwayatLaporanPage
 
 object Routes {
     const val SPLASH = "splash"
     const val HALAMAN_AWAL = "halamanAwal"
     const val LOGIN = "login"
     const val REGISTER = "register"
-    
+
     // User Routes
     const val USER_DASHBOARD = "user_dashboard"
     const val USER_PROFIL = "user_profil"
     const val USER_BUAT_LAPORAN = "user_buat_laporan"
     const val USER_RIWAYAT = "user_riwayat"
     const val USER_DETAIL_LAPORAN = "user_detail_laporan/{reportIndex}"
-    
+
     // Admin Routes
     const val ADMIN_DASHBOARD = "admin_dashboard"
     const val ADMIN_PROFIL = "admin_profil"
     const val ADMIN_KELOLA_PENGGUNA = "admin_kelola_pengguna"
     const val ADMIN_VERIFIKASI_LAPORAN = "admin_verifikasi_laporan"
+    const val ADMIN_DAFTAR_LAPORAN = "admin_daftar_laporan"
 }
 
 @Composable
@@ -38,20 +42,20 @@ fun AppNavHost(navController: NavHostController) {
         navController = navController,
         startDestination = Routes.SPLASH
     ) {
-        composable(Routes.SPLASH) { 
-            SplashScreen(navController) 
+        composable(Routes.SPLASH) {
+            SplashScreen(navController)
         }
-        
-        composable(Routes.HALAMAN_AWAL) { 
-            HalamanAwal(navController) 
+
+        composable(Routes.HALAMAN_AWAL) {
+            HalamanAwal(navController)
         }
-        
-        composable(Routes.LOGIN) { 
+
+        composable(Routes.LOGIN) {
             LoginScreen(
-                onNavigateToRegister = { 
-                    navController.navigate(Routes.REGISTER) 
+                onNavigateToRegister = {
+                    navController.navigate(Routes.REGISTER)
                 },
-                onLoginSuccess = { 
+                onLoginSuccess = {
                     navController.navigate(Routes.USER_DASHBOARD) {
                         popUpTo(Routes.HALAMAN_AWAL) { inclusive = true }
                     }
@@ -63,48 +67,51 @@ fun AppNavHost(navController: NavHostController) {
                 onNavigateToUserDashboard = {
                     navController.navigate(Routes.USER_DASHBOARD)
                 }
-            ) 
+            )
         }
-        
-        composable(Routes.REGISTER) { 
+
+        composable(Routes.REGISTER) {
             RegisterScreen(
                 onNavigateToLogin = {
                     navController.navigate(Routes.LOGIN)
                 },
-                onRegisterSuccess = { 
+                onRegisterSuccess = {
                     navController.navigate(Routes.USER_DASHBOARD) {
                         popUpTo(Routes.HALAMAN_AWAL) { inclusive = true }
                     }
                 },
+                onNavigateToAdminDashboard = {
+                    navController.navigate(Routes.ADMIN_DASHBOARD)
+                },
                 onBack = {
                     navController.navigate(Routes.HALAMAN_AWAL)
                 }
-            ) 
+            )
         }
-        
+
         // --- USER FLOW ---
         composable(Routes.USER_DASHBOARD) {
             UserHomeScreen(onNavigate = { index ->
                 handleUserNavigation(index, navController)
             })
         }
-        
-        composable(Routes.USER_BUAT_LAPORAN) { 
+
+        composable(Routes.USER_BUAT_LAPORAN) {
             BuatLaporanPage(
                 onNavigate = { index -> handleUserNavigation(index, navController) },
                 onNavigateBack = { navController.popBackStack() }
-            ) 
+            )
         }
-        
-        composable(Routes.USER_RIWAYAT) { 
+
+        composable(Routes.USER_RIWAYAT) {
             RiwayatLaporanPage(
                 onNavigate = { index -> handleUserNavigation(index, navController) },
                 onNavigateToDetail = { index ->
                     navController.navigate("user_detail_laporan/$index")
                 }
-            ) 
+            )
         }
-        
+
         composable(
             route = Routes.USER_DETAIL_LAPORAN,
             arguments = listOf(navArgument("reportIndex") { type = NavType.IntType })
@@ -115,31 +122,32 @@ fun AppNavHost(navController: NavHostController) {
                 onBack = { navController.popBackStack() }
             )
         }
-        
+
         composable(Routes.USER_PROFIL) {
             UserProfileScreen(
                 onNavigate = { index -> handleUserNavigation(index, navController) },
                 onLogout = { performLogout(navController) }
             )
         }
-        
+
         // --- ADMIN FLOW ---
         composable(Routes.ADMIN_DASHBOARD) {
             AdminHomeScreen(onNavigate = { index ->
                 handleAdminNavigation(index, navController)
             })
         }
-        
-        composable(Routes.ADMIN_VERIFIKASI_LAPORAN) { 
+
+        composable(Routes.ADMIN_VERIFIKASI_LAPORAN) {
             VerifikasiLaporanPage(
-                onNavigate = { index -> handleAdminNavigation(index, navController) }
-            ) 
+                onNavigate = { index -> handleAdminNavigation(index, navController) },
+                onBack = { navController.popBackStack() }
+            )
         }
-        
-        composable(Routes.ADMIN_KELOLA_PENGGUNA) { 
+
+        composable(Routes.ADMIN_KELOLA_PENGGUNA) {
             KelolaPenggunaPage(
                 onNavigate = { index -> handleAdminNavigation(index, navController) }
-            ) 
+            )
         }
 
         composable(Routes.ADMIN_PROFIL) {
@@ -147,6 +155,10 @@ fun AppNavHost(navController: NavHostController) {
                 onNavigate = { index -> handleAdminNavigation(index, navController) },
                 onLogout = { performLogout(navController) }
             )
+        }
+
+        composable(Routes.ADMIN_DAFTAR_LAPORAN) {
+            DaftarLaporanPage(navController)
         }
     }
 }
@@ -192,9 +204,6 @@ private fun handleAdminNavigation(index: Int, navController: NavHostController) 
                 launchSingleTop = true
                 restoreState = true
             }
-        }
-        composable("detailLaporan"){
-            DetailLaporan(navController)
         }
     }
 }
