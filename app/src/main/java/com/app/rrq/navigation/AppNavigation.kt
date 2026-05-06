@@ -16,42 +16,50 @@ sealed class Screen(val route: String) {
 
 @Composable
 fun AppNavigation() {
+
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
         startDestination = Screen.Login.route
     ) {
+
         composable(Screen.Login.route) {
+
             LoginScreen(
+
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
                 },
+
                 onLoginSuccess = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                        popUpTo(Screen.Login.route) {
+                            inclusive = true
+                        }
                     }
-                },
-                onNavigateToUserDashboard = {
-                    navController.navigate(Screen.Home.route)
                 }
             )
         }
+
         composable(Screen.Register.route) {
+
             RegisterScreen(
+
                 onNavigateToLogin = {
                     navController.popBackStack()
                 },
+
                 onRegisterSuccess = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                        popUpTo(Screen.Login.route) {
+                            inclusive = true
+                        }
                     }
-                },
-                onNavigateToAdminDashboard = {
-                    navController.navigate(Screen.Home.route)
                 }
             )
         }
+
         composable(Screen.Home.route) {
             AppNavHost(navController)
         }

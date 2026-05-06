@@ -1,40 +1,17 @@
 package com.app.rrq.ui.auth
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,30 +29,38 @@ import androidx.compose.ui.unit.sp
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
     onRegisterSuccess: () -> Unit,
-    onNavigateToAdminDashboard: () -> Unit,
+    onNavigateToAdminDashboard: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
+
     var namaLengkap by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var nomorTelepon by remember { mutableStateOf("") }
+
     var password by remember { mutableStateOf("") }
     var konfirmasiPassword by remember { mutableStateOf("") }
+
     var passwordVisible by remember { mutableStateOf(false) }
     var konfirmasiVisible by remember { mutableStateOf(false) }
+
     var setujuSyarat by remember { mutableStateOf(false) }
 
     var namaError by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf("") }
     var teleponError by remember { mutableStateOf("") }
+
     var passwordError by remember { mutableStateOf("") }
     var konfirmasiError by remember { mutableStateOf("") }
     var syaratError by remember { mutableStateOf("") }
 
     fun validate(): Boolean {
+
         var valid = true
+
         namaError = ""
         emailError = ""
         teleponError = ""
+
         passwordError = ""
         konfirmasiError = ""
         syaratError = ""
@@ -88,7 +73,11 @@ fun RegisterScreen(
         if (email.isBlank()) {
             emailError = "Email tidak boleh kosong"
             valid = false
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        } else if (
+            !android.util.Patterns.EMAIL_ADDRESS
+                .matcher(email)
+                .matches()
+        ) {
             emailError = "Format email tidak valid"
             valid = false
         }
@@ -96,7 +85,10 @@ fun RegisterScreen(
         if (nomorTelepon.isBlank()) {
             teleponError = "Nomor telepon tidak boleh kosong"
             valid = false
-        } else if (!nomorTelepon.startsWith("08") || nomorTelepon.length < 10) {
+        } else if (
+            !nomorTelepon.startsWith("08") ||
+            nomorTelepon.length < 10
+        ) {
             teleponError = "Nomor telepon tidak valid"
             valid = false
         }
@@ -118,7 +110,8 @@ fun RegisterScreen(
         }
 
         if (!setujuSyarat) {
-            syaratError = "Anda harus menyetujui syarat dan ketentuan"
+            syaratError =
+                "Anda harus menyetujui syarat dan ketentuan"
             valid = false
         }
 
@@ -143,6 +136,7 @@ fun RegisterScreen(
                 onClick = onBack,
                 modifier = Modifier.offset(x = (-12).dp)
             ) {
+
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Kembali",
@@ -172,10 +166,12 @@ fun RegisterScreen(
             AuthTextField(
                 label = "Nama Lengkap",
                 value = namaLengkap,
+
                 onValueChange = {
                     namaLengkap = it
                     namaError = ""
                 },
+
                 placeholder = "Achira Lucy",
                 errorMessage = namaError
             )
@@ -185,10 +181,12 @@ fun RegisterScreen(
             AuthTextField(
                 label = "Email",
                 value = email,
+
                 onValueChange = {
                     email = it
                     emailError = ""
                 },
+
                 placeholder = "achira@gmail.com",
                 errorMessage = emailError,
                 keyboardType = KeyboardType.Email
@@ -199,10 +197,12 @@ fun RegisterScreen(
             AuthTextField(
                 label = "Nomor Telepon",
                 value = nomorTelepon,
+
                 onValueChange = {
                     nomorTelepon = it
                     teleponError = ""
                 },
+
                 placeholder = "08xxxxxxxxxx",
                 errorMessage = teleponError,
                 keyboardType = KeyboardType.Phone
@@ -221,30 +221,40 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = password,
+
                 onValueChange = {
                     password = it
                     passwordError = ""
                 },
+
                 placeholder = {
                     Text(
                         "Min. 6 karakter",
                         color = Color.Gray
                     )
                 },
+
                 modifier = Modifier.fillMaxWidth(),
+
                 shape = RoundedCornerShape(12.dp),
-                visualTransformation = if (passwordVisible)
-                    VisualTransformation.None
-                else
-                    PasswordVisualTransformation(),
+
+                visualTransformation =
+                    if (passwordVisible)
+                        VisualTransformation.None
+                    else
+                        PasswordVisualTransformation(),
+
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password
                 ),
+
                 singleLine = true,
+
                 isError = passwordError.isNotEmpty(),
 
                 supportingText = {
                     if (passwordError.isNotEmpty()) {
+
                         Text(
                             passwordError,
                             color = MaterialTheme.colorScheme.error
@@ -253,16 +263,20 @@ fun RegisterScreen(
                 },
 
                 trailingIcon = {
+
                     IconButton(
                         onClick = {
                             passwordVisible = !passwordVisible
                         }
                     ) {
+
                         Icon(
-                            imageVector = if (passwordVisible)
-                                Icons.Default.Visibility
-                            else
-                                Icons.Default.VisibilityOff,
+                            imageVector =
+                                if (passwordVisible)
+                                    Icons.Default.Visibility
+                                else
+                                    Icons.Default.VisibilityOff,
+
                             contentDescription = null,
                             tint = Color.Gray
                         )
@@ -270,6 +284,7 @@ fun RegisterScreen(
                 },
 
                 colors = OutlinedTextFieldDefaults.colors(
+
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black,
 
@@ -296,30 +311,40 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = konfirmasiPassword,
+
                 onValueChange = {
                     konfirmasiPassword = it
                     konfirmasiError = ""
                 },
+
                 placeholder = {
                     Text(
                         "Ulangi password",
                         color = Color.Gray
                     )
                 },
+
                 modifier = Modifier.fillMaxWidth(),
+
                 shape = RoundedCornerShape(12.dp),
-                visualTransformation = if (konfirmasiVisible)
-                    VisualTransformation.None
-                else
-                    PasswordVisualTransformation(),
+
+                visualTransformation =
+                    if (konfirmasiVisible)
+                        VisualTransformation.None
+                    else
+                        PasswordVisualTransformation(),
+
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password
                 ),
+
                 singleLine = true,
+
                 isError = konfirmasiError.isNotEmpty(),
 
                 supportingText = {
                     if (konfirmasiError.isNotEmpty()) {
+
                         Text(
                             konfirmasiError,
                             color = MaterialTheme.colorScheme.error
@@ -328,16 +353,20 @@ fun RegisterScreen(
                 },
 
                 trailingIcon = {
+
                     IconButton(
                         onClick = {
                             konfirmasiVisible = !konfirmasiVisible
                         }
                     ) {
+
                         Icon(
-                            imageVector = if (konfirmasiVisible)
-                                Icons.Default.Visibility
-                            else
-                                Icons.Default.VisibilityOff,
+                            imageVector =
+                                if (konfirmasiVisible)
+                                    Icons.Default.Visibility
+                                else
+                                    Icons.Default.VisibilityOff,
+
                             contentDescription = null,
                             tint = Color.Gray
                         )
@@ -345,6 +374,7 @@ fun RegisterScreen(
                 },
 
                 colors = OutlinedTextFieldDefaults.colors(
+
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black,
 
@@ -367,10 +397,12 @@ fun RegisterScreen(
 
                 Checkbox(
                     checked = setujuSyarat,
+
                     onCheckedChange = {
                         setujuSyarat = it
                         syaratError = ""
                     },
+
                     colors = CheckboxDefaults.colors(
                         checkedColor = RoadResQTeal,
                         uncheckedColor = Color.Gray
@@ -434,6 +466,7 @@ fun RegisterScreen(
                     )
 
                     if (syaratError.isNotEmpty()) {
+
                         Text(
                             text = syaratError,
                             color = MaterialTheme.colorScheme.error,
@@ -447,19 +480,23 @@ fun RegisterScreen(
 
             Button(
                 onClick = {
-//                    if (validate()) {
-//                        onRegisterSuccess()
-//                    }
-                    onNavigateToAdminDashboard()
+
+                    if (validate()) {
+                        onRegisterSuccess()
+                    }
                 },
+
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
+
                 shape = RoundedCornerShape(14.dp),
+
                 colors = ButtonDefaults.buttonColors(
                     containerColor = RoadResQTeal
                 )
             ) {
+
                 Text(
                     text = "Daftar",
                     fontSize = 16.sp,
@@ -493,6 +530,7 @@ fun RegisterScreen(
                             append("Masuk")
                         }
                     },
+
                     fontSize = 14.sp
                 )
             }
@@ -504,9 +542,13 @@ fun RegisterScreen(
 fun AuthTextField(
     label: String,
     value: String,
+
     onValueChange: (String) -> Unit,
+
     placeholder: String,
+
     errorMessage: String = "",
+
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
 
@@ -521,9 +563,11 @@ fun AuthTextField(
 
     OutlinedTextField(
         value = value,
+
         onValueChange = onValueChange,
 
         placeholder = {
+
             Text(
                 placeholder,
                 color = Color.Gray
@@ -543,7 +587,9 @@ fun AuthTextField(
         isError = errorMessage.isNotEmpty(),
 
         supportingText = {
+
             if (errorMessage.isNotEmpty()) {
+
                 Text(
                     errorMessage,
                     color = MaterialTheme.colorScheme.error
@@ -552,6 +598,7 @@ fun AuthTextField(
         },
 
         colors = OutlinedTextFieldDefaults.colors(
+
             focusedTextColor = Color.Black,
             unfocusedTextColor = Color.Black,
 
