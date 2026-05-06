@@ -29,7 +29,7 @@ import com.app.rrq.R
 val RoadResQTeal = Color(0xFF0C8FBA)
 val RoadResQLightBg = Color(0xFFF0F4F8)
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
@@ -91,7 +91,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Image(
-                painter = painterResource(id = R.drawable.logo),
+                painter = painterResource(id = R.drawable.road),
                 contentDescription = null,
                 modifier = Modifier
                     .size(100.dp)
@@ -106,8 +106,7 @@ fun LoginScreen(
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                color = Color.Black
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -122,12 +121,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(36.dp))
 
-            Text(
-                text = "Email",
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black
-            )
-
+            Text("Email", fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
@@ -136,51 +130,21 @@ fun LoginScreen(
                     email = it
                     emailError = ""
                 },
-                placeholder = {
-                    Text(
-                        "nama@email.com",
-                        color = Color.Gray
-                    )
-                },
+                placeholder = { Text("nama@email.com") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email
-                ),
-                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 isError = emailError.isNotEmpty(),
-
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-
-                    focusedBorderColor = RoadResQTeal,
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-
-                    cursorColor = RoadResQTeal
-                ),
-
                 supportingText = {
                     if (emailError.isNotEmpty()) {
-                        Text(
-                            emailError,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        Text(emailError, color = MaterialTheme.colorScheme.error)
                     }
                 }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Password",
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black
-            )
-
+            Text("Password", fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
@@ -189,62 +153,28 @@ fun LoginScreen(
                     password = it
                     passwordError = ""
                 },
-                placeholder = {
-                    Text(
-                        "••••••••",
-                        color = Color.Gray
-                    )
-                },
+                placeholder = { Text("••••••••") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-
                 visualTransformation = if (passwordVisible)
                     VisualTransformation.None
                 else
                     PasswordVisualTransformation(),
-
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password
-                ),
-
-                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 isError = passwordError.isNotEmpty(),
-
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-
-                    focusedBorderColor = RoadResQTeal,
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-
-                    cursorColor = RoadResQTeal
-                ),
-
                 supportingText = {
                     if (passwordError.isNotEmpty()) {
-                        Text(
-                            passwordError,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        Text(passwordError, color = MaterialTheme.colorScheme.error)
                     }
                 },
-
                 trailingIcon = {
-                    IconButton(
-                        onClick = {
-                            passwordVisible = !passwordVisible
-                        }
-                    ) {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible)
                                 Icons.Default.Visibility
                             else
                                 Icons.Default.VisibilityOff,
-                            contentDescription = null,
-                            tint = Color.Gray
+                            contentDescription = null
                         )
                     }
                 }
@@ -254,9 +184,7 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                    if (validate()) {
-                        onLoginSuccess()
-                    }
+                    if (validate()) onLoginSuccess()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -266,10 +194,7 @@ fun LoginScreen(
                     containerColor = RoadResQTeal
                 )
             ) {
-                Text(
-                    text = "Masuk",
-                    color = Color.White
-                )
+                Text("Masuk", color = Color.White)
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -278,13 +203,11 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-
                 Text(
                     text = "Belum punya akun? ",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
-
                 Text(
                     text = "Daftar",
                     fontSize = 14.sp,

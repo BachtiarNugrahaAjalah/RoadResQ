@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.app.rrq.RoadResQApp
+import com.app.rrq.navigation.AppNavHost
 import com.app.rrq.ui.auth.LoginScreen
 import com.app.rrq.ui.auth.RegisterScreen
 
@@ -31,6 +31,9 @@ fun AppNavigation() {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
+                },
+                onNavigateToUserDashboard = {
+                    navController.navigate(Screen.Home.route)
                 }
             )
         }
@@ -43,11 +46,14 @@ fun AppNavigation() {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
+                },
+                onNavigateToAdminDashboard = {
+                    navController.navigate(Screen.Home.route)
                 }
             )
         }
         composable(Screen.Home.route) {
-            RoadResQApp()
+            AppNavHost(navController)
         }
     }
 }

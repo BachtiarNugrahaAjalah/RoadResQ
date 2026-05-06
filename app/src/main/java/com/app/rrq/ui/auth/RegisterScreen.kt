@@ -51,7 +51,9 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
-    onRegisterSuccess: () -> Unit
+    onRegisterSuccess: () -> Unit,
+    onNavigateToAdminDashboard: () -> Unit,
+    onBack: () -> Unit = {}
 ) {
     var namaLengkap by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -138,7 +140,7 @@ fun RegisterScreen(
         ) {
 
             IconButton(
-                onClick = onNavigateToLogin,
+                onClick = onBack,
                 modifier = Modifier.offset(x = (-12).dp)
             ) {
                 Icon(
@@ -445,9 +447,10 @@ fun RegisterScreen(
 
             Button(
                 onClick = {
-                    if (validate()) {
-                        onRegisterSuccess()
-                    }
+//                    if (validate()) {
+//                        onRegisterSuccess()
+//                    }
+                    onNavigateToAdminDashboard()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
