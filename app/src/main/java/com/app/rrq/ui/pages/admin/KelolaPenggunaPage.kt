@@ -53,9 +53,9 @@ import com.app.rrq.ui.theme.RoadResQTheme
 import com.app.rrq.ui.theme.TealPrimary
 import com.app.rrq.ui.theme.TextPrimary
 import com.app.rrq.ui.theme.TextSecondary
-import com.app.rrq.data.UserData
-import com.app.rrq.model.Role
-import com.app.rrq.model.User
+import com.app.rrq.data.model.UserData
+import com.app.rrq.data.model.Role
+import com.app.rrq.data.model.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
