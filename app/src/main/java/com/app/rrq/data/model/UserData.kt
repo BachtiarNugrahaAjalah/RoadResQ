@@ -1,8 +1,4 @@
-package com.app.rrq.data
-
-import com.app.rrq.model.Role
-import com.app.rrq.model.User
-import com.app.rrq.model.Status
+package com.app.rrq.data.model
 
 object UserData {
     val dataUser = listOf(

@@ -38,24 +38,38 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.app.rrq.data.LaporanData
-import com.app.rrq.model.Laporan
+import com.app.rrq.data.model.Laporan
 import com.app.rrq.ui.pages.UserBottomBar
 import com.app.rrq.ui.theme.BackgroundGray
 import com.app.rrq.ui.theme.RoadResQTheme
+import com.app.rrq.data.api.RetrofitClient
+import coil.compose.AsyncImage
 
 @Composable
 fun RiwayatLaporanPage(
     modifier: Modifier = Modifier.Companion,
     onNavigate: (Int) -> Unit = {},
-    onNavigateToDetail: (Int) -> Unit = {}
+    onNavigateToDetail: (Int) -> Unit = {},
+    onReportsLoaded: (List<Laporan>) -> Unit = {}
 ) {
     var selectedFilter by remember { mutableStateOf("Semua") }
-    val allReports = LaporanData.datareal
+    var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
     val filteredReportsWithIndex = if (selectedFilter == "Semua") {
         allReports.mapIndexed { index, report -> index to report }
     } else {
         allReports.mapIndexed { index, report -> index to report }.filter { it.second.Status == selectedFilter }
+    }
+
+    var isLoading by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        try {
+            allReports = RetrofitClient.instance.getLaporans() // Mengambil
+
+            onReportsLoaded(allReports) // Mengirim data ke penampung global
+            isLoading = false
+        } catch (e: Exception) {
+            isLoading = false
+        }
     }
 
     Scaffold(
@@ -154,12 +168,12 @@ fun LaporanCardItem(report: Laporan, onClick: () -> Unit) {
                 .fillMaxWidth(),
             verticalAlignment = Alignment.Companion.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = report.Gambar),
-                contentDescription = null,
-                modifier = Modifier.Companion
+            AsyncImage(
+                model = report.Gambar_url,
+                contentDescription = report.JudulLaporan,
+                modifier = Modifier
                     .size(80.dp)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
+                    .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Companion.Crop
             )
 

@@ -24,9 +24,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
 import com.app.rrq.R
-import com.app.rrq.data.UserData
-import com.app.rrq.model.User
+import com.app.rrq.data.model.UserData
 import com.app.rrq.ui.theme.*
+
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppRoot(isAdmin: Boolean = false) {
@@ -41,6 +49,9 @@ fun UserHomeScreen(
 ) {
     var user = UserData.dataUser[1]
     var selectedTab by remember { mutableIntStateOf(0) }
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         containerColor = BackgroundGray,

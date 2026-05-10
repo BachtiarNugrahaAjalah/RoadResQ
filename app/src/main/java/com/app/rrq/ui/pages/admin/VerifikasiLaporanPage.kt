@@ -59,11 +59,17 @@ import androidx.compose.ui.unit.sp
 import com.app.rrq.R
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.*
+import com.app.rrq.data.model.Laporan
+import com.app.rrq.data.api.RetrofitClient
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VerifikasiLaporanPage(onNavigate: (Int) -> Unit = {},
-                  onBack: () -> Unit = {}) {
+fun VerifikasiLaporanPage(
+    onNavigate: (Int) -> Unit = {},
+    onBack: () -> Unit = {},
+    onReportsLoaded: (List<Laporan>) -> Unit = {}
+) {
+    var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -72,6 +78,16 @@ fun VerifikasiLaporanPage(onNavigate: (Int) -> Unit = {},
     var catatanAdmin by remember { mutableStateOf("") }
     var showDialogTolak by remember { mutableStateOf(false) }
     var alasanTolak by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        try {
+            allReports = RetrofitClient.instance.getLaporans()
+            onReportsLoaded(allReports)
+            isLoading = false
+        } catch (e: Exception) {
+            isLoading = false
+        }
+    }
 
     Scaffold(
         snackbarHost = {
@@ -141,7 +157,7 @@ fun VerifikasiLaporanPage(onNavigate: (Int) -> Unit = {},
                 )
             }
 
-            Spacer(modifier = Modifier.Companion.height(12.dp))
+            Spacer(modifier = Modifier.Companion.height(4.dp))
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
@@ -154,37 +170,37 @@ fun VerifikasiLaporanPage(onNavigate: (Int) -> Unit = {},
                         verticalAlignment = Alignment.Companion.CenterVertically
                     ) {
                         Text(
-                            text = "Jalan Rusak",
+                            text = "Jalan Berlubang di Depan Sekolah",
                             fontWeight = FontWeight.Companion.Bold,
                             fontSize = 20.sp,
                             color = Color.Companion.Black
                         )
 
-                        Surface(
-                            color = when (statusLaporan) {
-                                "Selesai" -> Color(0xFFD4EDDA)
-                                "Ditolak" -> Color(0xFFF8D7DA)
-                                "Diproses" -> Color(0xFFE3F2FD)
-                                else -> Color(0xFFFFF4E5)
-                            },
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
-                        ) {
-                            Text(
-                                text = statusLaporan,
-                                color = when (statusLaporan) {
-                                    "Selesai" -> Color(0xFF28A745)
-                                    "Ditolak" -> Color(0xFFDC3545)
-                                    "Diproses" -> Color(0xFF007BFF)
-                                    else -> Color(0xFFFFA000)
-                                },
-                                modifier = Modifier.Companion.padding(
-                                    horizontal = 12.dp,
-                                    vertical = 4.dp
-                                ),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Companion.Bold
-                            )
-                        }
+//                        Surface(
+//                            color = when (statusLaporan) {
+//                                "Selesai" -> Color(0xFFD4EDDA)
+//                                "Ditolak" -> Color(0xFFF8D7DA)
+//                                "Diproses" -> Color(0xFFE3F2FD)
+//                                else -> Color(0xFFFFF4E5)
+//                            },
+//                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+//                        ) {
+//                            Text(
+//                                text = statusLaporan,
+//                                color = when (statusLaporan) {
+//                                    "Selesai" -> Color(0xFF28A745)
+//                                    "Ditolak" -> Color(0xFFDC3545)
+//                                    "Diproses" -> Color(0xFF007BFF)
+//                                    else -> Color(0xFFFFA000)
+//                                },
+//                                modifier = Modifier.Companion.padding(
+//                                    horizontal = 12.dp,
+//                                    vertical = 4.dp
+//                                ),
+//                                fontSize = 12.sp,
+//                                fontWeight = FontWeight.Companion.Bold
+//                            )
+//                        }
                     }
 
                     Spacer(modifier = Modifier.Companion.height(8.dp))
@@ -200,7 +216,7 @@ fun VerifikasiLaporanPage(onNavigate: (Int) -> Unit = {},
                     Spacer(modifier = Modifier.Companion.height(12.dp))
 
                     Text(
-                        text = "Bisa buat berenang nih",
+                        text = "Terdapat lubang cukup besar di depan sekolah yang membahayakan pengendara, terutama saat malam hari.",
                         color = Color.Companion.Gray
                     )
                 }
@@ -263,7 +279,7 @@ fun VerifikasiLaporanPage(onNavigate: (Int) -> Unit = {},
                         Column(modifier = Modifier.Companion.padding(vertical = 4.dp)) {
                             Text(text = "LOKASI", fontSize = 10.sp, color = Color.Companion.Gray)
                             Text(
-                                text = "Jl. Buntu",
+                                text = "Jl. Ahmad Yani, Bandar Lampung",
                                 fontWeight = FontWeight.Companion.Bold,
                                 fontSize = 14.sp,
                                 color = Color.Companion.Black

@@ -29,6 +29,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,20 +45,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.app.rrq.data.LaporanData
-import com.app.rrq.model.Laporan
+import com.app.rrq.data.model.Laporan
 import com.app.rrq.ui.theme.RoadResQTheme
+import coil.compose.AsyncImage
+import com.app.rrq.data.api.RetrofitClient
 
 @Composable
 fun DetailLaporanPage(
     reportIndex: Int,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier.Companion
+    modifier: Modifier = Modifier.Companion,
+    onReportsLoaded: (List<Laporan>) -> Unit = {}
 ) {
-    val report = LaporanData.datareal.getOrNull(reportIndex) ?: LaporanData.datareal[0]
+    var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        try {
+            allReports = RetrofitClient.instance.getLaporans() // Mengambil
+
+            onReportsLoaded(allReports) // Mengirim data ke penampung global
+            isLoading = false
+        } catch (e: Exception) {
+            isLoading = false
+        }
+    }
 
     DetailLaporanContent(
-        report = report,
+        report = allReports[reportIndex],
         onBack = onBack,
         modifier = modifier
     )
@@ -65,6 +83,7 @@ fun DetailLaporanContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier.Companion
 ) {
+
     Scaffold(
         modifier = modifier,
         containerColor = Color(0xFFF8F9FA)
@@ -101,14 +120,14 @@ fun DetailLaporanContent(
 
             Spacer(modifier = Modifier.Companion.height(24.dp))
 
-            Image(
-                painter = painterResource(id = report.Gambar),
-                contentDescription = null,
-                modifier = Modifier.Companion
+            AsyncImage(
+                model = report.Gambar_url,
+                contentDescription = report.JudulLaporan,
+                modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)
                     .clip(RoundedCornerShape(24.dp)),
-                contentScale = ContentScale.Companion.Crop
+                contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.Companion.height(20.dp))
