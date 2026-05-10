@@ -49,6 +49,7 @@ import com.app.rrq.data.model.Laporan
 import com.app.rrq.ui.theme.RoadResQTheme
 import coil.compose.AsyncImage
 import com.app.rrq.data.api.RetrofitClient
+import com.app.rrq.data.repository.LaporanRepository
 
 @Composable
 fun DetailLaporanPage(
@@ -58,23 +59,43 @@ fun DetailLaporanPage(
     onReportsLoaded: (List<Laporan>) -> Unit = {}
 ) {
     var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val repository = remember { LaporanRepository() }
     LaunchedEffect(Unit) {
         try {
-            allReports = RetrofitClient.instance.getLaporans() // Mengambil
-
+            allReports = repository.getLaporans() // Mengambil
             onReportsLoaded(allReports) // Mengirim data ke penampung global
-            isLoading = false
         } catch (e: Exception) {
-            isLoading = false
+            errorMessage = e.message
         }
     }
+    when {
+        errorMessage != null -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Terjadi kesalahan")
+            }
+        }
 
-    DetailLaporanContent(
-        report = allReports[reportIndex],
-        onBack = onBack,
-        modifier = modifier
-    )
+        reportIndex !in allReports.indices -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Data laporan tidak ditemukan")
+            }
+        }
+
+        else -> {
+            DetailLaporanContent(
+                report = allReports[reportIndex],
+                onBack = onBack,
+                modifier = modifier
+            )
+        }
+    }
 }
 
 @Composable
