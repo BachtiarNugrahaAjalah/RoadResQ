@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "445436153029",
+    "project_id": "roadresq-4fb6d",
+    "storage_bucket": "roadresq-4fb6d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:445436153029:android:7166ef50cbf31c7a3bf4ac",
+        "android_client_info": {
+          "package_name": "com.app.rrq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXVuIw5KWjOJ0wJjwH2dDWzSuyni5k-VQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

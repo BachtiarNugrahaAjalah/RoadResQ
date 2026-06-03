@@ -2,13 +2,11 @@ package com.app.rrq
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.navigation.compose.rememberNavController
-import com.app.rrq.navigation.AppNavHost
-import com.app.rrq.ui.theme.RoadResQTheme
+import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
-
+import com.app.rrq.core.navigation.AppNavigation
+import com.app.rrq.core.theme.RoadResQTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,8 +15,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RoadResQTheme {
-                val navController = rememberNavController()
-                AppNavHost(navController)
+                AppNavigation()
             }
         }
     }
