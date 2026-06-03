@@ -5,8 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
-import com.app.rrq.navigation.AppNavHost
-import com.app.rrq.ui.theme.RoadResQTheme
+import com.app.rrq.core.navigation.AppNavHost
+import com.app.rrq.core.theme.RoadResQTheme
 import androidx.core.view.WindowCompat
 
 
