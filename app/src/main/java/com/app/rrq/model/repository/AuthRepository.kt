@@ -1,83 +1,131 @@
 package com.app.rrq.model.repository
 
-import com.app.rrq.core.utils.HashUtils
 import com.app.rrq.core.utils.SystemLogger
 import com.app.rrq.model.data.LoginResult
-import com.app.rrq.model.data.UserAccount
-import com.app.rrq.model.datasource.GistUserDataSource
-import kotlinx.coroutines.delay
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-class AuthRepository {
+class AuthRepository(
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+) {
+    suspend fun login(email: String, password: String): LoginResult = withContext(Dispatchers.IO) {
+        val authResult = Tasks.await(auth.signInWithEmailAndPassword(email.trim(), password))
+        val firebaseUser = authResult.user ?: throw Exception("User Firebase tidak ditemukan")
+        val userDoc = Tasks.await(db.collection(USERS).document(firebaseUser.uid).get())
 
-    // Hashed mock passwords
-    // "admin123" -> 240753d49def217b0f2ecd65165832e1d5231c611c02b4fc361dec0e03e7eef2
-    // "user123"  -> 0b7074e64f7b60efb7964b732fbdf6b3b5c7f8976b05eb41603598d1d87e0fa0
-    private val localMockUsers = listOf(
-        UserAccount(
-            id = "1",
-            name = "Admin Satu",
-            email = "admin@roadresq.com",
-            password = HashUtils.sha256("admin123"),
-            phoneNumber = "081234567890",
-            role = "Admin",
-            accountStatus = "ACTIVE",
-            createdAt = "2026-05-20T00:00:00Z"
-        ),
-        UserAccount(
-            id = "2",
-            name = "User Satu",
-            email = "user@roadresq.com",
-            password = HashUtils.sha256("user123"),
-            phoneNumber = "081234567891",
-            role = "User",
-            accountStatus = "ACTIVE",
-            createdAt = "2026-05-20T01:00:00Z"
-        )
-    )
-
-    suspend fun login(email: String, password: String): LoginResult {
-        delay(1000) // Simulasi network delay
-        
-        // 1. Ambil data dari Gist
-        val users = try {
-            GistUserDataSource.fetchUsers()
-        } catch (e: Exception) {
-            // Log fallback ke data lokal
-            SystemLogger.logActivity("Gist fetch failed, using local fallback: ${e.message}", email)
-            localMockUsers
+        if (!userDoc.exists()) {
+            auth.signOut()
+            throw Exception("Profil pengguna belum tersedia di Firestore")
         }
 
-        // 2. Hash input password
-        val inputHashedPassword = HashUtils.sha256(password)
-
-        // 3. Cari user yang cocok
-        val matchedUser = users.find { 
-            it.email.equals(email, ignoreCase = true) && it.password == inputHashedPassword 
+        val accountStatus = userDoc.getString("accountStatus") ?: ACCOUNT_ACTIVE
+        if (accountStatus != ACCOUNT_ACTIVE) {
+            auth.signOut()
+            throw Exception("Akun Anda sedang dinonaktifkan")
         }
 
-        if (matchedUser != null) {
-            if (matchedUser.accountStatus != "ACTIVE") {
-                throw Exception("Akun Anda sedang dinonaktifkan")
-            }
-            SystemLogger.logActivity("${matchedUser.role} Logged In Successfully", email)
-            return LoginResult(
-                userId = matchedUser.id,
-                email  = matchedUser.email,
-                name   = matchedUser.name,
-                role   = matchedUser.role
+        Tasks.await(
+            db.collection(USERS).document(firebaseUser.uid).update(
+                mapOf(
+                    "lastLoginAt" to FieldValue.serverTimestamp(),
+                    "updatedAt" to FieldValue.serverTimestamp()
+                )
             )
-        }
+        )
 
-        SystemLogger.logActivity("Failed Login Attempt (Invalid Credentials)", email)
-        throw Exception("Email atau password salah")
+        SystemLogger.logActivity("${userDoc.roleLabel()} Logged In Successfully", email)
+        userDoc.toLoginResult(firebaseUser.uid)
     }
 
-    suspend fun register(name: String, email: String, password: String): Boolean {
-        delay(1000)
-        if (name.isNotBlank() && email.contains("@") && password.length >= 6) {
-            SystemLogger.logActivity("New User Registered", email)
-            return true
+    suspend fun register(name: String, email: String, password: String): LoginResult = withContext(Dispatchers.IO) {
+        register(name, email, password, "")
+    }
+
+    suspend fun register(name: String, email: String, password: String, phoneNumber: String): LoginResult = withContext(Dispatchers.IO) {
+        val cleanEmail = email.trim()
+        if (name.isBlank() || !cleanEmail.contains("@") || password.length < 6) {
+            throw Exception("Data registrasi tidak valid")
         }
-        throw Exception("Data registrasi tidak valid")
+
+        val authResult = Tasks.await(auth.createUserWithEmailAndPassword(cleanEmail, password))
+        val firebaseUser = authResult.user ?: throw Exception("User Firebase tidak ditemukan")
+        val userData = mapOf(
+            "uid" to firebaseUser.uid,
+            "fullName" to name.trim(),
+            "email" to cleanEmail,
+            "emailLower" to cleanEmail.lowercase(),
+            "phoneNumber" to phoneNumber.trim(),
+            "role" to ROLE_USER,
+            "accountStatus" to ACCOUNT_ACTIVE,
+            "photoUrl" to null,
+            "createdAt" to FieldValue.serverTimestamp(),
+            "updatedAt" to FieldValue.serverTimestamp(),
+            "lastLoginAt" to FieldValue.serverTimestamp()
+        )
+
+        Tasks.await(db.collection(USERS).document(firebaseUser.uid).set(userData))
+        SystemLogger.logActivity("New User Registered", cleanEmail)
+
+        LoginResult(
+            userId = firebaseUser.uid,
+            email = cleanEmail,
+            name = name.trim(),
+            role = roleToUiLabel(ROLE_USER)
+        )
+    }
+
+    suspend fun getCurrentUserSession(): LoginResult? = withContext(Dispatchers.IO) {
+        val firebaseUser = auth.currentUser ?: return@withContext null
+        val userDoc = Tasks.await(db.collection(USERS).document(firebaseUser.uid).get())
+
+        if (!userDoc.exists()) {
+            auth.signOut()
+            return@withContext null
+        }
+
+        val accountStatus = userDoc.getString("accountStatus") ?: ACCOUNT_ACTIVE
+        if (accountStatus != ACCOUNT_ACTIVE) {
+            auth.signOut()
+            return@withContext null
+        }
+
+        userDoc.toLoginResult(firebaseUser.uid)
+    }
+
+    fun logout() {
+        auth.signOut()
+    }
+
+    private fun DocumentSnapshot.toLoginResult(uid: String): LoginResult {
+        return LoginResult(
+            userId = uid,
+            email = getString("email") ?: "",
+            name = getString("fullName") ?: "",
+            role = roleLabel()
+        )
+    }
+
+    private fun DocumentSnapshot.roleLabel(): String {
+        return roleToUiLabel(getString("role") ?: ROLE_USER)
+    }
+
+    private fun roleToUiLabel(role: String): String {
+        return when (role.uppercase()) {
+            ROLE_ADMIN -> "Admin"
+            else -> "User"
+        }
+    }
+
+    private companion object {
+        const val USERS = "users"
+        const val ROLE_ADMIN = "ADMIN"
+        const val ROLE_USER = "USER"
+        const val ACCOUNT_ACTIVE = "ACTIVE"
     }
 }

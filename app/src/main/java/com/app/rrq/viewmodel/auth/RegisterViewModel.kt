@@ -32,19 +32,14 @@ class RegisterViewModel(
         viewModelScope.launch {
             _uiState.value = RegisterState.Loading
             try {
-                val success = registerUseCase(name, email, password)
-                if (success) {
-                    // Auto-login registered user and save session details
-                    com.app.rrq.core.session.SessionManager.saveSession(
-                        userId = java.util.UUID.randomUUID().toString(),
-                        email = email,
-                        name = name,
-                        role = "User"
-                    )
-                    _uiState.value = RegisterState.Success
-                } else {
-                    _uiState.value = RegisterState.Error("Gagal mendaftar")
-                }
+                val result = registerUseCase(name, email, password)
+                com.app.rrq.core.session.SessionManager.saveSession(
+                    userId = result.userId,
+                    email = result.email,
+                    name = result.name,
+                    role = result.role
+                )
+                _uiState.value = RegisterState.Success
             } catch (e: Exception) {
                 _uiState.value = RegisterState.Error(e.message ?: "Unknown error occurred")
             }

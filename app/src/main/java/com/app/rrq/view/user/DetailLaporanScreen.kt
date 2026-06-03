@@ -54,6 +54,7 @@ import com.app.rrq.viewmodel.user.DetailLaporanViewModel
 import com.app.rrq.viewmodel.user.DetailLaporanState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.collectAsState
+import com.app.rrq.R
 
 @Composable
 fun DetailLaporanScreen(
@@ -148,6 +149,8 @@ fun DetailLaporanContent(
             AsyncImage(
                 model = report.Gambar_url,
                 contentDescription = report.JudulLaporan,
+                placeholder = painterResource(id = R.drawable.laporan1),
+                error = painterResource(id = R.drawable.laporan1),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)
@@ -287,13 +290,17 @@ fun InfoSectionCard(icon: ImageVector, label: String, value: String) {
 fun StatusBadge(status: String) {
     val backgroundColor = when (status) {
         "Selesai" -> Color(0xFFDCFCE7)
+        "Diverifikasi" -> Color(0xFFE0F2FE)
         "Diproses" -> Color(0xFFFEF3C7)
+        "Ditolak" -> Color(0xFFFEE2E2)
         "Menunggu" -> Color(0xFFFFF7ED)
         else -> Color(0xFFF1F5F9)
     }
     val textColor = when (status) {
         "Selesai" -> Color(0xFF22C55E)
+        "Diverifikasi" -> Color(0xFF0284C7)
         "Diproses" -> Color(0xFFD97706)
+        "Ditolak" -> Color(0xFFEF4444)
         "Menunggu" -> Color(0xFFF59E0B)
         else -> Color(0xFF64748B)
     }

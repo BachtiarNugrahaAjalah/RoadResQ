@@ -67,7 +67,7 @@ fun DaftarLaporanScreen(
 
     var selectedFilter by remember { mutableStateOf("Semua") }
     var searchQuery by remember { mutableStateOf("") }
-    val filters = listOf("Semua", "Baru", "Diverifikasi", "Diproses", "Selesai")
+    val filters = listOf("Semua", "Baru", "Diverifikasi", "Diproses", "Selesai", "Ditolak")
 
     val filteredReports = remember(allReports, selectedFilter, searchQuery) {
         allReports.filter { laporan ->
@@ -253,7 +253,7 @@ fun LaporanCardCustom(laporan: Laporan, onClick: () -> Unit) {
             }
 
             Text(
-                text = "oleh Zahra",
+                text = "oleh ${laporan.ReporterName.ifBlank { "Pengguna RoadResQ" }}",
                 fontSize = 14.sp,
                 color = TextSecondary,
                 modifier = Modifier.padding(vertical = 4.dp)
@@ -288,8 +288,8 @@ fun LaporanCardCustom(laporan: Laporan, onClick: () -> Unit) {
                     Surface(
                         shape = RoundedCornerShape(50),
                         color = when (laporan.TingkatUrgensi) {
-                            "TINGGI" -> Color(0xFFFEE2E2)
-                            "SEDANG" -> Color(0xFFFEF3C7)
+                            "Tinggi" -> Color(0xFFFEE2E2)
+                            "Sedang" -> Color(0xFFFEF3C7)
                             else -> Color(0xFFE5E7EB)
                         }
                     ) {
@@ -302,8 +302,8 @@ fun LaporanCardCustom(laporan: Laporan, onClick: () -> Unit) {
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = when (laporan.TingkatUrgensi) {
-                                "TINGGI" -> Color(0xFFEF4444)
-                                "SEDANG" -> Color(0xFFD97706)
+                                "Tinggi" -> Color(0xFFEF4444)
+                                "Sedang" -> Color(0xFFD97706)
                                 else -> Color(0xFF6B7280)
                             }
                         )

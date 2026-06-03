@@ -449,7 +449,7 @@ fun AdminHomeScreen(
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     AdminStatCard(
-                        value       = "${(state?.totalLaporan ?: 0) - (state?.diproses ?: 0) - (state?.selesai ?: 0)}",
+                        value       = "${state?.laporanBaru ?: 0}",
                         label       = "Laporan Baru",
                         iconBgColor = Color(0xFFFEF3C7),
                         iconTint    = OrangeAccent,

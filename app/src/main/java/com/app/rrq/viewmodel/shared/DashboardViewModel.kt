@@ -20,7 +20,8 @@ sealed class DashboardState {
         val selesai: Int,
         val prioritasTinggi: Int,
         val laporanTerbaru: List<Laporan>,
-        val allLaporans: List<Laporan> = emptyList()
+        val allLaporans: List<Laporan> = emptyList(),
+        val laporanBaru: Int = 0
     ) : DashboardState()
     data class Error(val message: String) : DashboardState()
 }
@@ -49,6 +50,7 @@ class DashboardViewModel(
                 }
 
                 val total = laporans.size
+                val laporanBaru = laporans.count { it.Status == "Menunggu" || it.Status == "Baru" }
                 val diproses = laporans.count { it.Status == "Diproses" || it.StatusAdmin == "Diproses" }
                 val selesai = laporans.count { it.Status == "Selesai" || it.StatusAdmin == "Selesai" }
                 val prioritasTinggi = laporans.count { it.TingkatUrgensi == "Tinggi" }
@@ -62,7 +64,8 @@ class DashboardViewModel(
                     selesai = selesai,
                     prioritasTinggi = prioritasTinggi,
                     laporanTerbaru = terbaru,
-                    allLaporans = laporans
+                    allLaporans = laporans,
+                    laporanBaru = laporanBaru
                 )
             } catch (e: Exception) {
                 _uiState.value = DashboardState.Error(e.message ?: "Terjadi kesalahan")

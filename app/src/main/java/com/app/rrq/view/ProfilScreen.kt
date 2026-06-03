@@ -553,7 +553,7 @@ fun SystemLogsDialog(
         text = {
             Column(modifier = Modifier.height(400.dp)) {
                 Text(
-                    text = "Aktivitas terbaru dari simulasi Gist & Repository:",
+                    text = "Aktivitas terbaru dari Firebase & Repository:",
                     fontSize = 12.sp,
                     color = TextSecondary,
                     modifier = Modifier.padding(bottom = 8.dp)

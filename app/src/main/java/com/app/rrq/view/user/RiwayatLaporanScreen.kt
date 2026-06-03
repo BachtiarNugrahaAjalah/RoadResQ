@@ -49,6 +49,7 @@ import com.app.rrq.viewmodel.user.RiwayatLaporanViewModel
 import com.app.rrq.viewmodel.user.RiwayatLaporanState
 import androidx.compose.runtime.collectAsState
 import coil.compose.AsyncImage
+import com.app.rrq.R
 
 @Composable
 fun RiwayatLaporanScreen(
@@ -143,7 +144,7 @@ fun FilterChipRow(
     selectedFilter: String,
     onFilterSelected: (String) -> Unit
 ) {
-    val filters = listOf("Semua", "Menunggu", "Diproses", "Selesai")
+    val filters = listOf("Semua", "Menunggu", "Diverifikasi", "Diproses", "Selesai", "Ditolak")
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -186,6 +187,8 @@ fun LaporanCardItem(report: Laporan, onClick: () -> Unit) {
             AsyncImage(
                 model = report.Gambar_url,
                 contentDescription = report.JudulLaporan,
+                placeholder = painterResource(id = R.drawable.laporan1),
+                error = painterResource(id = R.drawable.laporan1),
                 modifier = Modifier
                     .size(80.dp)
                     .clip(RoundedCornerShape(16.dp)),
@@ -240,14 +243,18 @@ fun LaporanCardItem(report: Laporan, onClick: () -> Unit) {
 fun StatusBadgeItem(status: String) {
     val backgroundColor = when (status) {
         "Selesai" -> Color(0xFFDCFCE7)
+        "Diverifikasi" -> Color(0xFFE0F2FE)
         "Diproses" -> Color(0xFFFEF3C7)
+        "Ditolak" -> Color(0xFFFEE2E2)
         "Menunggu" -> Color(0xFFFFF7ED)
         else -> Color(0xFFF1F5F9)
     }
 
     val textColor = when (status) {
         "Selesai" -> Color(0xFF22C55E)
+        "Diverifikasi" -> Color(0xFF0284C7)
         "Diproses" -> Color(0xFFD97706)
+        "Ditolak" -> Color(0xFFEF4444)
         "Menunggu" -> Color(0xFFF59E0B)
         else -> Color(0xFF64748B)
     }

@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && userDoc(request.auth.uid).data.role == "ADMIN"
+        && userDoc(request.auth.uid).data.accountStatus == "ACTIVE";
+    }
+
+    function isActiveUser() {
+      return signedIn()
+        && userDoc(request.auth.uid).data.accountStatus == "ACTIVE";
+    }
+
+    match /users/{uid} {
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role == "USER"
+        && request.resource.data.accountStatus == "ACTIVE";
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow update: if isAdmin() || (
+        signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.accountStatus == resource.data.accountStatus
+      );
+      allow delete: if false;
+    }
+
+    match /reports/{reportId} {
+      allow create: if isActiveUser()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == "WAITING";
+
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+
+      allow update: if isAdmin();
+      allow delete: if false;
+
+      match /statusLogs/{logId} {
+        allow read: if isAdmin()
+          || (
+            signedIn()
+            && get(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid
+          );
+        allow create: if isAdmin();
+        allow update, delete: if false;
+      }
+    }
+
+    match /users/{uid}/notifications/{notificationId} {
+      allow read, update: if signedIn() && request.auth.uid == uid;
+      allow create: if isAdmin();
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    match /appConfig/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

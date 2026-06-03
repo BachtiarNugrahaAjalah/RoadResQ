@@ -240,9 +240,9 @@ fun UserCardCustom(pengguna: Pengguna, onUpdateStatus: (String, String) -> Unit)
 
             UserInfoRow(icon = Icons.Default.Email, text = pengguna.email)
             Spacer(modifier = Modifier.Companion.height(8.dp))
-            UserInfoRow(icon = Icons.Default.Phone, text = pengguna.nomorTelepon)
+            UserInfoRow(icon = Icons.Default.Phone, text = pengguna.nomorTelepon.ifBlank { "-" })
             Spacer(modifier = Modifier.Companion.height(8.dp))
-            UserInfoRow(icon = Icons.Default.CalendarToday, text = "Daftar Baru Saja")
+            UserInfoRow(icon = Icons.Default.CalendarToday, text = pengguna.tanggalDaftar.ifBlank { "-" })
 
             Spacer(modifier = Modifier.Companion.height(20.dp))
 

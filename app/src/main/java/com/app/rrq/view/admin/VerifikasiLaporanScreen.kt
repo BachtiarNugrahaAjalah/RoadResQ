@@ -52,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -189,6 +190,8 @@ fun VerifikasiLaporanScreen(
                         AsyncImage(
                             model = report.Gambar_url,
                             contentDescription = report.JudulLaporan,
+                            placeholder = painterResource(id = R.drawable.laporan1),
+                            error = painterResource(id = R.drawable.laporan1),
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -219,6 +222,7 @@ fun VerifikasiLaporanScreen(
                                     color = when (statusLaporan) {
                                         "Selesai" -> Color(0xFFD4EDDA)
                                         "Ditolak" -> Color(0xFFF8D7DA)
+                                        "Diverifikasi" -> Color(0xFFE0F2FE)
                                         "Diproses" -> Color(0xFFE3F2FD)
                                         else -> Color(0xFFFFF4E5)
                                     },
@@ -229,6 +233,7 @@ fun VerifikasiLaporanScreen(
                                         color = when (statusLaporan) {
                                             "Selesai" -> Color(0xFF28A745)
                                             "Ditolak" -> Color(0xFFDC3545)
+                                            "Diverifikasi" -> Color(0xFF0284C7)
                                             "Diproses" -> Color(0xFF007BFF)
                                             else -> Color(0xFFFFA000)
                                         },
@@ -288,7 +293,7 @@ fun VerifikasiLaporanScreen(
                                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
                                     Text(text = "PELAPOR", fontSize = 10.sp, color = Color.Gray)
                                     Text(
-                                        text = "Zahra",
+                                        text = report.ReporterName.ifBlank { "Pengguna RoadResQ" },
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp,
                                         color = Color.Black
