@@ -99,7 +99,6 @@ fun AppNavHost(navController: NavHostController) {
         composable(Routes.USER_BUAT_LAPORAN) {
             BuatLaporanPage(
                 onNavigate = { index -> handleUserNavigation(index, navController) },
-                onNavigateBack = { navController.popBackStack() }
             )
         }
 
