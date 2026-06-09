@@ -1,4 +1,4 @@
-package com.app.rrq.model
+package com.app.rrq.data.model
 
 data class User(
     val name: String,

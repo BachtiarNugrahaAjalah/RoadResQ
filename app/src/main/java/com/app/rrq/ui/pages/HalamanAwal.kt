@@ -74,7 +74,7 @@ fun HalamanAwal(navController: NavController) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
                     Image(
-                        painter = painterResource(id = R.drawable.logo),
+                        painter = painterResource(id = R.drawable.logorrq),
                         contentDescription = "logo",
                         modifier = Modifier.size(100.dp)
                             .clip(RoundedCornerShape(20.dp))

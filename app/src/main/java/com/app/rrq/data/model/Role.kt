@@ -1,4 +1,4 @@
-package com.app.rrq.model
+package com.app.rrq.data.model
 
 enum class Role(val value: String) {
     ADMIN("Admin"),

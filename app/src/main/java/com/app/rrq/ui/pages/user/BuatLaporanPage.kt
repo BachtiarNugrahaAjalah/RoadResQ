@@ -12,7 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,33 +27,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.rrq.ui.pages.UserBottomBar
 import com.app.rrq.ui.theme.BackgroundGray
-
-@Composable
-fun UrgencyButton(
-    text: String,
-    isSelected: Boolean,
-    selectedColor: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = modifier
-            .height(48.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() },
-        color = if (isSelected) selectedColor else Color(0xFFF1F3F5),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = text,
-                color = if (isSelected) Color.White else Color(0xFF495057),
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                fontSize = 14.sp
-            )
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,24 +52,31 @@ fun BuatLaporanPage(
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp)
         ) {
-            Text(
-                text = "Buat Laporan",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF212529)
-            )
-            Text(
-                text = "Isi detail kerusakan jalan",
-                fontSize = 14.sp,
-                color = Color(0xFF6C757D)
-            )
+
+            Column {
+                Text(
+                    text = "Buat Laporan",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF212529)
+                )
+                Text(
+                    text = "Isi detail kerusakan jalan",
+                    fontSize = 14.sp,
+                    color = Color(0xFF6C757D)
+                )
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(text = "Foto Kerusakan", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = Color(0xFF495057))
             Box(
-                modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(12.dp))
-                    .background(Color.White).clickable {
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White)
+                    .clickable {
                         Toast.makeText(context, "Fitur kamera akan segera hadir", Toast.LENGTH_SHORT).show()
                     }
             ) {
@@ -157,10 +137,24 @@ fun BuatLaporanPage(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(text = "Tingkat Urgensi", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = Color(0xFF495057))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                UrgencyButton("Rendah", viewModel.urgensi == "Rendah", Color(0xFF198754), Modifier.weight(1f)) { viewModel.onUrgensiChange("Rendah") }
-                UrgencyButton("Sedang", viewModel.urgensi == "Sedang", Color(0xFFFD7E14), Modifier.weight(1f)) { viewModel.onUrgensiChange("Sedang") }
-                UrgencyButton("Tinggi", viewModel.urgensi == "Tinggi", Color(0xFFDC3545), Modifier.weight(1f)) { viewModel.onUrgensiChange("Tinggi") }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                val urgencyOptions = listOf(
+                    "Rendah" to Color(0xFF198754),
+                    "Sedang" to Color(0xFFFD7E14),
+                    "Tinggi" to Color(0xFFDC3545)
+                )
+                urgencyOptions.forEach { (text, color) ->
+                    UrgencyButton(
+                        text = text,
+                        isSelected = viewModel.urgensi == text,
+                        selectedColor = color,
+                        modifier = Modifier.weight(1f),
+                        onClick = { viewModel.onUrgensiChange(text) }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -208,6 +202,33 @@ fun BuatLaporanPage(
                     Text("Kirim Laporan", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun UrgencyButton(
+    text: String,
+    isSelected: Boolean,
+    selectedColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = modifier
+            .height(48.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onClick() },
+        color = if (isSelected) selectedColor else Color(0xFFF1F3F5),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = text,
+                color = if (isSelected) Color.White else Color(0xFF495057),
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                fontSize = 14.sp
+            )
         }
     }
 }

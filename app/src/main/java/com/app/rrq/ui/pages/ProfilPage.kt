@@ -23,8 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.rrq.ui.theme.*
 import com.app.rrq.R
-import com.app.rrq.model.User
-import com.app.rrq.data.UserData
+import com.app.rrq.data.model.UserData
 
 @Composable
 fun UserProfileScreen(
@@ -36,6 +35,7 @@ fun UserProfileScreen(
 
     Scaffold(
         containerColor = BackgroundGray,
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             UserBottomBar(selected = selectedTab, onSelect = {
                 selectedTab = it
@@ -60,6 +60,11 @@ fun UserProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsTopHeight(WindowInsets.statusBars)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Box(
                         modifier = Modifier
                             .size(80.dp)
@@ -150,6 +155,7 @@ fun AdminProfileScreen(
 
     Scaffold(
         containerColor = BackgroundGray,
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             AdminBottomBar(selected = selectedTab, onSelect = {
                 selectedTab = it
@@ -163,7 +169,6 @@ fun AdminProfileScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // ── Teal Header dengan Avatar Admin ───────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -175,6 +180,11 @@ fun AdminProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsTopHeight(WindowInsets.statusBars)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Box(contentAlignment = Alignment.BottomEnd) {
                         Box(
                             modifier = Modifier
