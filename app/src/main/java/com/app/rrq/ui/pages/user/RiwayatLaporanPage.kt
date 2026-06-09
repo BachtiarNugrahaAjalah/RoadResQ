@@ -1,5 +1,8 @@
 package com.app.rrq.ui.pages.user
 
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,15 +19,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.app.rrq.data.api.RetrofitClient
 import com.app.rrq.data.model.Laporan
+import com.app.rrq.data.repository.LaporanRepository
 import com.app.rrq.ui.pages.UserBottomBar
 import com.app.rrq.ui.theme.BackgroundGray
-import com.app.rrq.ui.theme.RoadResQTheme
 
 @Composable
 fun RiwayatLaporanPage(
@@ -36,21 +37,20 @@ fun RiwayatLaporanPage(
     var selectedFilter by remember { mutableStateOf("Semua") }
     var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    val repository = remember { LaporanRepository() }
 
     val filteredReportsWithIndex = if (selectedFilter == "Semua") {
         allReports.mapIndexed { index, report -> index to report }
     } else {
         allReports.mapIndexed { index, report -> index to report }
-            .filter { it.second.Status == selectedFilter }
+            .filter { it.second.status == selectedFilter }
     }
 
     LaunchedEffect(Unit) {
-        try {
-            val response = RetrofitClient.instance.getLaporans()
-            allReports = response
-            onReportsLoaded(allReports)
-            isLoading = false
-        } catch (_: Exception) {
+        isLoading = true
+        repository.getSemuaLaporan { listLaporan ->
+            allReports = listLaporan
+            onReportsLoaded(listLaporan)
             isLoading = false
         }
     }
@@ -121,7 +121,7 @@ fun FilterChipRow(
     selectedFilter: String,
     onFilterSelected: (String) -> Unit
 ) {
-    val filters = listOf("Semua", "Menunggu", "Diproses", "Selesai")
+    val filters = listOf("Semua", "Menunggu", "Diverifikasi", "Diproses", "Selesai", "Ditolak")
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -147,6 +147,17 @@ fun FilterChipRow(
 
 @Composable
 fun LaporanCardItem(report: Laporan, onClick: () -> Unit) {
+    val bitmap = remember(report.gambarUrl) {
+        if (report.gambarUrl.isEmpty()) return@remember null
+        try {
+            val base64Data = report.gambarUrl.substringAfter("base64,").trim()
+            val decodedBytes = Base64.decode(base64Data, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -162,11 +173,12 @@ fun LaporanCardItem(report: Laporan, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = report.Gambar_url,
-                contentDescription = report.JudulLaporan,
+                model = bitmap,
+                contentDescription = report.judulLaporan,
                 modifier = Modifier
                     .size(80.dp)
-                    .clip(RoundedCornerShape(16.dp)),
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFE2E8F0)),
                 contentScale = ContentScale.Crop
             )
 
@@ -176,7 +188,7 @@ fun LaporanCardItem(report: Laporan, onClick: () -> Unit) {
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = report.JudulLaporan,
+                    text = report.judulLaporan,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1E293B),
@@ -194,7 +206,7 @@ fun LaporanCardItem(report: Laporan, onClick: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = report.KategoriKerusakan,
+                        text = report.kategoriKerusakan,
                         fontSize = 13.sp,
                         color = Color(0xFF64748B)
                     )
@@ -203,31 +215,26 @@ fun LaporanCardItem(report: Laporan, onClick: () -> Unit) {
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = report.Tanggal,
+                    text = report.tanggal,
                     fontSize = 13.sp,
                     color = Color(0xFF94A3B8)
                 )
             }
 
-            StatusBadgeItem(status = report.Status)
+            StatusBadgeItem(status = report.status)
         }
     }
 }
 
 @Composable
 fun StatusBadgeItem(status: String) {
-    val backgroundColor = when (status) {
-        "Selesai" -> Color(0xFFDCFCE7)
-        "Diproses" -> Color(0xFFFEF3C7)
-        "Menunggu" -> Color(0xFFFFF7ED)
-        else -> Color(0xFFF1F5F9)
-    }
-
-    val textColor = when (status) {
-        "Selesai" -> Color(0xFF22C55E)
-        "Diproses" -> Color(0xFFD97706)
-        "Menunggu" -> Color(0xFFF59E0B)
-        else -> Color(0xFF64748B)
+    val (backgroundColor, textColor) = when (status) {
+        "Selesai" -> Color(0xFFDCFCE7) to Color(0xFF22C55E)
+        "Diproses" -> Color(0xFFFEF3C7) to Color(0xFFD97706)
+        "Diverifikasi" -> Color(0xFFE0F2FE) to Color(0xFF0284C7)
+        "Ditolak" -> Color(0xFFFEE2E2) to Color(0xFFEF4444)
+        "Menunggu" -> Color(0xFFFFF7ED) to Color(0xFFF59E0B)
+        else -> Color(0xFFF1F5F9) to Color(0xFF64748B)
     }
 
     Surface(
@@ -237,17 +244,9 @@ fun StatusBadgeItem(status: String) {
         Text(
             text = status,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-            fontSize = 12.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             color = textColor
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RiwayatLaporanPreview() {
-    RoadResQTheme {
-        RiwayatLaporanPage()
     }
 }

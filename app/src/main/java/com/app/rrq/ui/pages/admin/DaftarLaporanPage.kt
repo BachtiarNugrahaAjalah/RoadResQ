@@ -1,20 +1,11 @@
 package com.app.rrq.ui.pages.admin
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -26,38 +17,43 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.app.rrq.data.model.Laporan
+import com.app.rrq.data.repository.LaporanRepository
 import com.app.rrq.ui.pages.AdminBottomBar
 import com.app.rrq.ui.theme.*
-import com.app.rrq.data.api.RetrofitClient
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DaftarLaporanPage(
     onNavigate: (Int) -> Unit = {},
-    onNavigateToVerifikasi: () -> Unit = {},
+    onNavigateToVerifikasi: (Int) -> Unit = {},
     onReportsLoaded: (List<Laporan>) -> Unit = {}
 ) {
     var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
+    val repository = remember { LaporanRepository() }
 
     var selectedFilter by remember { mutableStateOf("Semua") }
-    val filters = listOf("Semua", "Baru", "Diverifikasi", "Diproses", "Selesai")
+    val filters = listOf("Semua", "Menunggu", "Diverifikasi", "Diproses", "Selesai", "Ditolak")
 
     var isLoading by remember { mutableStateOf(true) }
+    
     LaunchedEffect(Unit) {
-        try {
-            allReports = RetrofitClient.instance.getLaporans()
-            onReportsLoaded(allReports)
-            isLoading = false
-        } catch (e: Exception) {
+        isLoading = true
+        repository.getSemuaLaporan { list ->
+            allReports = list
+            onReportsLoaded(list)
             isLoading = false
         }
     }
+
+    val filteredReports = if (selectedFilter == "Semua") {
+        allReports
+    } else {
+        allReports.filter { it.status == selectedFilter }
+    }
+
     Scaffold(
         containerColor = BackgroundGray,
         bottomBar = {
@@ -77,7 +73,7 @@ fun DaftarLaporanPage(
                     color = TextPrimary
                 )
                 Text(
-                    text = "${allReports.size} laporan",
+                    text = "${filteredReports.size} laporan",
                     fontSize = 14.sp,
                     color = TextSecondary
                 )
@@ -123,12 +119,18 @@ fun DaftarLaporanPage(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(allReports) { laporan ->
-                    LaporanCardCustom(laporan, onNavigateToVerifikasi)
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = TealPrimary)
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    itemsIndexed(filteredReports) { index, laporan ->
+                        LaporanCardCustom(laporan, onClick = { onNavigateToVerifikasi(allReports.indexOf(laporan)) })
+                    }
                 }
             }
         }
@@ -169,7 +171,7 @@ fun LaporanCardCustom(laporan: Laporan, onClick: () -> Unit) {
                 verticalAlignment = Alignment.Top
             ) {
                 Text(
-                    text = laporan.JudulLaporan,
+                    text = laporan.judulLaporan,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -178,32 +180,31 @@ fun LaporanCardCustom(laporan: Laporan, onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis
                 )
 
+                val (bgColor, txtColor) = when (laporan.status) {
+                    "Selesai" -> Color(0xFFDCFCE7) to Color(0xFF22C55E)
+                    "Diproses" -> Color(0xFFFEF3C7) to Color(0xFFD97706)
+                    "Diverifikasi" -> Color(0xFFE0F2FE) to Color(0xFF0284C7)
+                    "Ditolak" -> Color(0xFFFEE2E2) to Color(0xFFEF4444)
+                    "Menunggu" -> Color(0xFFFFF7ED) to Color(0xFFF59E0B)
+                    else -> Color(0xFFF1F5F9) to Color(0xFF64748B)
+                }
+
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = when (laporan.Status) {
-                        "Ditolak" -> Color(0xFFFEE2E2)
-                        "Diverifikasi" -> Color(0xFFE0F2FE)
-                        "Selesai" -> Color(0xFFDCFCE7)
-                        else -> Color(0xFFFEF3C7)
-                    }
+                    color = bgColor
                 ) {
                     Text(
-                        text = laporan.Status,
+                        text = laporan.status,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = when (laporan.Status) {
-                            "Ditolak" -> Color(0xFFEF4444)
-                            "Diverifikasi" -> Color(0xFF0284C7)
-                            "Selesai" -> Color(0xFF16A34A)
-                            else -> Color(0xFFD97706)
-                        }
+                        color = txtColor
                     )
                 }
             }
 
             Text(
-                text = "oleh Zahra",
+                text = "oleh User",
                 fontSize = 14.sp,
                 color = TextSecondary,
                 modifier = Modifier.padding(vertical = 4.dp)
@@ -226,7 +227,7 @@ fun LaporanCardCustom(laporan: Laporan, onClick: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = laporan.Lokasi,
+                        text = laporan.lokasi,
                         fontSize = 13.sp,
                         color = TextSecondary,
                         maxLines = 1,
@@ -237,43 +238,35 @@ fun LaporanCardCustom(laporan: Laporan, onClick: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = when (laporan.TingkatUrgensi) {
-                            "TINGGI" -> Color(0xFFFEE2E2)
-                            "SEDANG" -> Color(0xFFFEF3C7)
+                        color = when (laporan.tingkatUrgensi) {
+                            "Tinggi" -> Color(0xFFFEE2E2)
+                            "Sedang" -> Color(0xFFFEF3C7)
                             else -> Color(0xFFE5E7EB)
                         }
                     ) {
                         Text(
-                            text = laporan.TingkatUrgensi,
+                            text = laporan.tingkatUrgensi,
                             modifier = Modifier.padding(
                                 horizontal = 8.dp,
                                 vertical = 2.dp
                             ),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = when (laporan.TingkatUrgensi) {
-                                "TINGGI" -> Color(0xFFEF4444)
-                                "SEDANG" -> Color(0xFFD97706)
+                            color = when (laporan.tingkatUrgensi) {
+                                "Tinggi" -> Color(0xFFEF4444)
+                                "Sedang" -> Color(0xFFD97706)
                                 else -> Color(0xFF6B7280)
                             }
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = laporan.Tanggal,
+                        text = laporan.tanggal,
                         fontSize = 12.sp,
                         color = TextSecondary
                     )
                 }
             }
         }
-    }
-}
-
-@Preview
-@Composable
-fun DaftarLaporanPagePreview() {
-    RoadResQTheme {
-        DaftarLaporanPage()
     }
 }
