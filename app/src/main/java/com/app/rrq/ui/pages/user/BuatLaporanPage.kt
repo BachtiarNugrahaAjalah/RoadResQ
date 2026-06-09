@@ -28,7 +28,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.rrq.ui.pages.UserBottomBar
 import com.app.rrq.ui.theme.BackgroundGray
 
-// --- Komponen Pendukung (Ditaruh di atas agar mudah terbaca) ---
 @Composable
 fun UrgencyButton(
     text: String,
@@ -94,7 +93,6 @@ fun BuatLaporanPage(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- FOTO KERUSAKAN ---
             Text(text = "Foto Kerusakan", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = Color(0xFF495057))
             Box(
                 modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(12.dp))
@@ -114,7 +112,6 @@ fun BuatLaporanPage(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- JUDUL LAPORAN ---
             Text(text = "Judul Laporan", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = Color(0xFF495057))
             OutlinedTextField(
                 value = viewModel.judul,
@@ -126,7 +123,6 @@ fun BuatLaporanPage(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- KATEGORI ---
             Text(text = "Kategori Kerusakan", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = Color(0xFF495057))
             ExposedDropdownMenuBox(
                 expanded = viewModel.expanded,
@@ -160,7 +156,6 @@ fun BuatLaporanPage(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- TINGKAT URGENSI ---
             Text(text = "Tingkat Urgensi", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = Color(0xFF495057))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 UrgencyButton("Rendah", viewModel.urgensi == "Rendah", Color(0xFF198754), Modifier.weight(1f)) { viewModel.onUrgensiChange("Rendah") }
@@ -170,7 +165,6 @@ fun BuatLaporanPage(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- LOKASI ---
             Text(text = "Lokasi Kejadian", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = Color(0xFF495057))
             OutlinedTextField(
                 value = viewModel.lokasi,
@@ -182,7 +176,6 @@ fun BuatLaporanPage(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- DESKRIPSI ---
             Text(text = "Deskripsi", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = Color(0xFF495057))
             OutlinedTextField(
                 value = viewModel.deskripsi,
@@ -193,7 +186,6 @@ fun BuatLaporanPage(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- BUTTON KIRIM ---
             Button(
                 onClick = {
                     if (viewModel.judul.isBlank() || viewModel.kategori.isBlank() || viewModel.lokasi.isBlank()) {
