@@ -33,7 +33,7 @@ object Routes {
     const val ADMIN_PROFIL = "admin_profil"
     const val ADMIN_KELOLA_PENGGUNA = "admin_kelola_pengguna"
     const val ADMIN_DAFTAR_LAPORAN = "admin_daftar_laporan"
-    const val ADMIN_VERIFIKASI_LAPORAN = "admin_verifikasi_laporan"
+    const val ADMIN_VERIFIKASI_LAPORAN = "admin_verifikasi_laporan/{reportIndex}"
 }
 
 @Composable
@@ -139,15 +139,19 @@ fun AppNavHost(navController: NavHostController) {
         composable(Routes.ADMIN_DAFTAR_LAPORAN) {
             DaftarLaporanPage(
                 onNavigate = { index -> handleAdminNavigation(index, navController) },
-                onNavigateToVerifikasi = {
-                    navController.navigate(Routes.ADMIN_VERIFIKASI_LAPORAN)
+                onNavigateToVerifikasi = { index ->
+                    navController.navigate("admin_verifikasi_laporan/$index")
                 }
             )
         }
 
-        composable(Routes.ADMIN_VERIFIKASI_LAPORAN) {
+        composable(
+            route = Routes.ADMIN_VERIFIKASI_LAPORAN,
+            arguments = listOf(navArgument("reportIndex") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val reportIndex = backStackEntry.arguments?.getInt("reportIndex") ?: 0
             VerifikasiLaporanPage(
-                onNavigate = { index -> handleAdminNavigation(index, navController) },
+                reportIndex = reportIndex,
                 onBack = { navController.popBackStack() }
             )
         }

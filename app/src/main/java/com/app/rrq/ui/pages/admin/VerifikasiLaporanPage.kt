@@ -1,19 +1,9 @@
 package com.app.rrq.ui.pages.admin
 
+import android.util.Base64
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -22,485 +12,319 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.app.rrq.R
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.*
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.app.rrq.data.model.Laporan
-import com.app.rrq.data.api.RetrofitClient
+import com.app.rrq.data.repository.LaporanRepository
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VerifikasiLaporanPage(
+    reportIndex: Int,
     onNavigate: (Int) -> Unit = {},
     onBack: () -> Unit = {},
     onReportsLoaded: (List<Laporan>) -> Unit = {}
 ) {
     var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
-    val focusManager = LocalFocusManager.current
+    var isLoading by remember { mutableStateOf(true) }
+    val repository = remember { LaporanRepository() }
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var statusLaporan by remember { mutableStateOf("Menunggu") }
-    var catatanAdmin by remember { mutableStateOf("") }
-    var showDialogTolak by remember { mutableStateOf(false) }
-    var alasanTolak by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
-        try {
-            allReports = RetrofitClient.instance.getLaporans()
-            onReportsLoaded(allReports)
-            isLoading = false
-        } catch (e: Exception) {
+        isLoading = true
+        repository.getSemuaLaporan { list ->
+            allReports = list
+            onReportsLoaded(list)
             isLoading = false
         }
     }
 
     Scaffold(
-        snackbarHost = {
-            Box(modifier = Modifier.Companion.fillMaxSize()) {
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier.Companion
-                        .align(Alignment.Companion.TopCenter)
-                        .padding(top = 50.dp)
-                ) { data ->
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFD4EDDA)),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.Companion.padding(horizontal = 16.dp)
-                    ) {
-                        Text(
-                            text = data.visuals.message,
-                            color = Color.Companion.Black,
-                            modifier = Modifier.Companion.padding(16.dp)
-                        )
-                    }
-                }
-            }
-        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             Surface(shadowElevation = 4.dp) {
                 TopAppBar(
-                    title = {
-                        Text(
-                            text = "Detail Laporan",
-                            fontWeight = FontWeight.Companion.Bold,
-                            fontSize = 18.sp,
-                            color = Color.Companion.Black
-                        )
-                    },
+                    title = { Text("Verifikasi Laporan", fontWeight = FontWeight.Bold) },
                     navigationIcon = {
                         IconButton(onClick = { onBack() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Kembali",
-                                tint = Color.Companion.Black
-                            )
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Companion.White)
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
                 )
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier.Companion
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFFF8F9FA))
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-        ) {
-            Card(
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                modifier = Modifier.Companion.fillMaxWidth()
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.laporan1),
-                    contentDescription = null,
-                    contentScale = ContentScale.Companion.Crop,
-                    modifier = Modifier.Companion.fillMaxWidth().height(180.dp)
-                )
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (reportIndex !in allReports.indices) {
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                Text("Laporan tidak ditemukan")
+            }
+        } else {
+            val laporan = allReports[reportIndex]
+            var catatanAdmin by remember { mutableStateOf(laporan.statusAdmin) }
+            var showDialogTolak by remember { mutableStateOf(false) }
+            var alasanTolak by remember { mutableStateOf("") }
+            var isUpdating by remember { mutableStateOf(false) }
+
+            val imageByteArray = remember(laporan.gambarUrl) {
+                try {
+                    if (laporan.gambarUrl.isNotEmpty()) {
+                        val base64Data = laporan.gambarUrl.substringAfter("base64,").trim()
+                        Base64.decode(base64Data, Base64.DEFAULT)
+                    } else null
+                } catch (e: Exception) { null }
             }
 
-            Spacer(modifier = Modifier.Companion.height(4.dp))
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                modifier = Modifier.Companion.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(Color(0xFFF8F9FA))
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
             ) {
-                Column(modifier = Modifier.Companion.padding(16.dp)) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.Companion.fillMaxWidth(),
-                        verticalAlignment = Alignment.Companion.CenterVertically
-                    ) {
-                        Text(
-                            text = "Jalan Berlubang di Depan Sekolah",
-                            fontWeight = FontWeight.Companion.Bold,
-                            fontSize = 20.sp,
-                            color = Color.Companion.Black
-                        )
-
-//                        Surface(
-//                            color = when (statusLaporan) {
-//                                "Selesai" -> Color(0xFFD4EDDA)
-//                                "Ditolak" -> Color(0xFFF8D7DA)
-//                                "Diproses" -> Color(0xFFE3F2FD)
-//                                else -> Color(0xFFFFF4E5)
-//                            },
-//                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
-//                        ) {
-//                            Text(
-//                                text = statusLaporan,
-//                                color = when (statusLaporan) {
-//                                    "Selesai" -> Color(0xFF28A745)
-//                                    "Ditolak" -> Color(0xFFDC3545)
-//                                    "Diproses" -> Color(0xFF007BFF)
-//                                    else -> Color(0xFFFFA000)
-//                                },
-//                                modifier = Modifier.Companion.padding(
-//                                    horizontal = 12.dp,
-//                                    vertical = 4.dp
-//                                ),
-//                                fontSize = 12.sp,
-//                                fontWeight = FontWeight.Companion.Bold
-//                            )
-//                        }
-                    }
-
-                    Spacer(modifier = Modifier.Companion.height(8.dp))
-
-                    Row {
-                        Chip("TINGGI")
-                        Spacer(modifier = Modifier.Companion.width(8.dp))
-                        Chip("Lainnya")
-                    }
-
-                    Spacer(modifier = Modifier.Companion.height(12.dp))
-                    HorizontalDivider(color = Color(0xFFF1F3F5))
-                    Spacer(modifier = Modifier.Companion.height(12.dp))
-
-                    Text(
-                        text = "Terdapat lubang cukup besar di depan sekolah yang membahayakan pengendara, terutama saat malam hari.",
-                        color = Color.Companion.Gray
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().height(200.dp)
+                ) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageByteArray)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.Companion.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                modifier = Modifier.Companion.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.Companion.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.Companion.CenterVertically) {
-                        Box(
-                            modifier = Modifier.Companion
-                                .size(50.dp)
-                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-                                .background(Color(0xFFE0EDF1)),
-                            contentAlignment = Alignment.Companion.Center
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile",
-                                tint = Color(0xFF0C7497),
-                                modifier = Modifier.Companion.size(24.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.Companion.width(12.dp))
-                        Column(modifier = Modifier.Companion.padding(vertical = 4.dp)) {
-                            Text(text = "PELAPOR", fontSize = 10.sp, color = Color.Companion.Gray)
                             Text(
-                                text = "Zahra",
-                                fontWeight = FontWeight.Companion.Bold,
-                                fontSize = 14.sp,
-                                color = Color.Companion.Black
+                                text = laporan.judulLaporan,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                modifier = Modifier.weight(1f)
                             )
+                            StatusBadgeAdmin(laporan.status)
                         }
-                    }
 
-                    Spacer(modifier = Modifier.Companion.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(verticalAlignment = Alignment.Companion.CenterVertically) {
-                        Box(
-                            modifier = Modifier.Companion
-                                .size(50.dp)
-                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-                                .background(Color(0xFFE0EDF1)),
-                            contentAlignment = Alignment.Companion.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "Lokasi",
-                                tint = Color(0xFF0C7497),
-                                modifier = Modifier.Companion.size(24.dp)
-                            )
+                        Row {
+                            ChipAdmin(laporan.tingkatUrgensi)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            ChipAdmin(laporan.kategoriKerusakan)
                         }
-                        Spacer(modifier = Modifier.Companion.width(12.dp))
 
-                        Column(modifier = Modifier.Companion.padding(vertical = 4.dp)) {
-                            Text(text = "LOKASI", fontSize = 10.sp, color = Color.Companion.Gray)
-                            Text(
-                                text = "Jl. Ahmad Yani, Bandar Lampung",
-                                fontWeight = FontWeight.Companion.Bold,
-                                fontSize = 14.sp,
-                                color = Color.Companion.Black
-                            )
-                        }
-                    }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = Color(0xFFF1F3F5))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    Spacer(modifier = Modifier.Companion.height(8.dp))
-
-                    Row(verticalAlignment = Alignment.Companion.CenterVertically) {
-                        Box(
-                            modifier = Modifier.Companion
-                                .size(50.dp)
-                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-                                .background(Color(0xFFE0EDF1)),
-                            contentAlignment = Alignment.Companion.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.DateRange,
-                                contentDescription = "Tanggal",
-                                tint = Color(0xFF0C7497),
-                                modifier = Modifier.Companion.size(24.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.Companion.width(12.dp))
-                        Column(modifier = Modifier.Companion.padding(vertical = 4.dp)) {
-                            Text(text = "TANGGAL", fontSize = 10.sp, color = Color.Companion.Gray)
-                            Text(
-                                text = "23 Apr 2026, 16:25",
-                                fontWeight = FontWeight.Companion.Bold,
-                                fontSize = 14.sp,
-                                color = Color.Companion.Black
-                            )
-                        }
+                        Text(text = laporan.deskripsi, color = Color.Gray)
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.Companion.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.Companion.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Companion.CenterVertically
-            ) {
-                Text(
-                    text = "Catatan Admin",
-                    fontWeight = FontWeight.Companion.Bold,
-                    color = Color.Companion.Black
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        InfoRowAdmin(Icons.Default.Person, "PELAPOR", "User")
+                        Spacer(modifier = Modifier.height(12.dp))
+                        InfoRowAdmin(Icons.Default.LocationOn, "LOKASI", laporan.lokasi)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        InfoRowAdmin(Icons.Default.DateRange, "TANGGAL", laporan.tanggal)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Catatan Admin", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = catatanAdmin,
+                    onValueChange = { catatanAdmin = it },
+                    placeholder = { Text("Tulis catatan...") },
+                    modifier = Modifier.fillMaxWidth().height(100.dp),
+                    shape = RoundedCornerShape(12.dp)
                 )
-                TextButton(
-                    onClick = {
-                        if (catatanAdmin.isNotEmpty()) {
-                            focusManager.clearFocus()
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                if (laporan.status == "Menunggu") {
+                    Button(
+                        onClick = {
                             coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Catatan berhasil disimpan!")
+                                isUpdating = true
+                                repository.updateStatusLaporan(laporan.id, "Diverifikasi", catatanAdmin)
+                                snackbarHostState.showSnackbar("Laporan diverifikasi")
+                                isUpdating = false
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF28A745)),
+                        enabled = !isUpdating
+                    ) {
+                        Text("Verifikasi Laporan", color = Color.White)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = { showDialogTolak = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        border = BorderStroke(1.dp, Color.Red),
+                        enabled = !isUpdating
+                    ) {
+                        Text("Tolak Laporan", color = Color.Red)
+                    }
+                } else {
+                    Text("Update Status:", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        StatusOptionButtonAdmin(
+                            label = "Diproses",
+                            isSelected = laporan.status == "Diproses",
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            coroutineScope.launch {
+                                repository.updateStatusLaporan(laporan.id, "Diproses", catatanAdmin)
+                            }
+                        }
+
+                        StatusOptionButtonAdmin(
+                            label = "Selesai",
+                            isSelected = laporan.status == "Selesai",
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            coroutineScope.launch {
+                                repository.updateStatusLaporan(laporan.id, "Selesai", catatanAdmin)
                             }
                         }
                     }
-                ) {
-                    Text(
-                        "Simpan",
-                        fontWeight = FontWeight.Companion.Bold,
-                        color = Color(0xFF007BFF)
-                    )
                 }
+                Spacer(modifier = Modifier.height(30.dp))
             }
-            OutlinedTextField(
-                value = catatanAdmin,
-                onValueChange = { catatanAdmin = it },
-                placeholder = {
-                    Text(
-                        text = "Tulis catatan perkembangan untuk pelapor...",
-                        color = Color.Companion.Gray
-                    )
-                },
-                modifier = Modifier.Companion.fillMaxWidth().height(100.dp),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.Companion.Black,
-                    unfocusedTextColor = Color.Companion.Black
-                )
-            )
 
-            Spacer(modifier = Modifier.Companion.height(20.dp))
-
-            if (statusLaporan == "Menunggu") {
-                Button(
-                    onClick = {
-                        statusLaporan = "Diverifikasi"
-                        coroutineScope.launch { snackbarHostState.showSnackbar("Laporan diverifikasi!") }
+            if (showDialogTolak) {
+                AlertDialog(
+                    onDismissRequest = { showDialogTolak = false },
+                    title = { Text("Tolak Laporan?") },
+                    text = {
+                        OutlinedTextField(
+                            value = alasanTolak,
+                            onValueChange = { alasanTolak = it },
+                            placeholder = { Text("Alasan penolakan...") }
+                        )
                     },
-                    modifier = Modifier.Companion.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF28A745)),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = "Verifikasi Laporan",
-                        color = Color.Companion.White
-                    )
-                }
-                Spacer(modifier = Modifier.Companion.height(8.dp))
-                OutlinedButton(
-                    onClick = { showDialogTolak = true },
-                    modifier = Modifier.Companion.fillMaxWidth(),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color.Companion.Red)
-                ) {
-                    Text(
-                        text = "Tolak Laporan",
-                        color = Color.Companion.Red
-                    )
-                }
-            } else if (statusLaporan == "Diverifikasi" || statusLaporan == "Diproses") {
-                Text(
-                    text = "Update Status:",
-                    fontWeight = FontWeight.Companion.Bold,
-                    fontSize = 14.sp,
-                    color = Color.Companion.Black
-                )
-                Spacer(modifier = Modifier.Companion.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatusOptionButton(
-                        label = "Diproses",
-                        isSelected = statusLaporan == "Diproses",
-                        modifier = Modifier.Companion.weight(1f)
-                    ) {
-                        statusLaporan = "Diproses"
-                    }
-
-                    StatusOptionButton(
-                        label = "Selesai",
-                        isSelected = statusLaporan == "Selesai",
-                        modifier = Modifier.Companion.weight(1f)
-                    ) {
-                        statusLaporan = "Selesai"
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Laporan telah selesai ditangani!")
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                coroutineScope.launch {
+                                    repository.updateStatusLaporan(laporan.id, "Ditolak", alasanTolak)
+                                    showDialogTolak = false
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                        ) {
+                            Text("Tolak", color = Color.White)
                         }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDialogTolak = false }) { Text("Batal") }
                     }
-                }
+                )
             }
-
-            Spacer(modifier = Modifier.Companion.height(30.dp))
         }
     }
+}
 
-    if (showDialogTolak) {
-        AlertDialog(
-            onDismissRequest = { showDialogTolak = false },
-            title = {
-                Text(
-                    text = "Tolak Laporan?"
-                )
-            },
-            text = {
-                OutlinedTextField(
-                    value = alasanTolak,
-                    onValueChange = { alasanTolak = it },
-                    placeholder = {
-                        Text(
-                            text = "Alasan penolakan..."
-                        )
-                    }
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        statusLaporan = "Ditolak"
-                        showDialogTolak = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Companion.Red)
-                ) {
-                    Text(
-                        text = "Tolak",
-                        color = Color.Companion.White
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialogTolak = false }) { Text("Batal") }
-            }
+@Composable
+fun InfoRowAdmin(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFE0EDF1)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(imageVector = icon, contentDescription = null, tint = Color(0xFF0C7497), modifier = Modifier.size(20.dp))
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(text = label, fontSize = 10.sp, color = Color.Gray)
+            Text(text = value, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        }
+    }
+}
+
+@Composable
+fun StatusBadgeAdmin(status: String) {
+    val (backgroundColor, textColor) = when (status) {
+        "Selesai" -> Color(0xFFDCFCE7) to Color(0xFF22C55E)
+        "Diproses" -> Color(0xFFFEF3C7) to Color(0xFFD97706)
+        "Diverifikasi" -> Color(0xFFE0F2FE) to Color(0xFF0284C7)
+        "Ditolak" -> Color(0xFFFEE2E2) to Color(0xFFEF4444)
+        "Menunggu" -> Color(0xFFFFF7ED) to Color(0xFFF59E0B)
+        else -> Color(0xFFF1F5F9) to Color(0xFF64748B)
+    }
+
+    Surface(color = backgroundColor, shape = RoundedCornerShape(50)) {
+        Text(
+            text = status,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = textColor
         )
     }
 }
 
 @Composable
-fun StatusOptionButton(label: String, isSelected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+fun StatusOptionButtonAdmin(label: String, isSelected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick,
         modifier = modifier,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-        border = BorderStroke(
-            1.dp,
-            if (isSelected) Color(0xFF007BFF) else Color.Companion.LightGray
-        ),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = if (isSelected) Color(0xFFE3F2FD) else Color.Companion.Transparent
-        )
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, if (isSelected) Color(0xFF007BFF) else Color.LightGray),
+        colors = ButtonDefaults.outlinedButtonColors(containerColor = if (isSelected) Color(0xFFE3F2FD) else Color.Transparent)
     ) {
-        Text(
-            label,
-            fontSize = 12.sp,
-            color = if (isSelected) Color(0xFF007BFF) else Color.Companion.Gray
-        )
+        Text(label, fontSize = 12.sp, color = if (isSelected) Color(0xFF007BFF) else Color.Gray)
     }
 }
 
 @Composable
-fun Chip(text: String) {
-    Surface(
-        color = Color(0xFFF1F3F5),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.Companion.padding(horizontal = 12.dp, vertical = 4.dp),
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Companion.Bold,
-            color = Color(0xFF6C757D)
-        )
+fun ChipAdmin(text: String) {
+    Surface(color = Color(0xFFF1F3F5), shape = RoundedCornerShape(16.dp)) {
+        Text(text = text, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF6C757D))
     }
 }
