@@ -23,19 +23,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.rrq.ui.theme.*
 import com.app.rrq.R
-import com.app.rrq.data.model.UserData
 
 @Composable
 fun UserProfileScreen(
     onNavigate: (Int) -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
-    var user = UserData.dataUser[1]
-    var selectedTab by remember { mutableIntStateOf(3) } // Profil aktif (index 3)
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val session = remember { com.app.rrq.data.local.SessionManager(context) }
+
+    val nama = session.getNama()
+    val email = session.getEmail()
+    val telepon = session.getTelepon()
+
+    var selectedTab by remember { mutableIntStateOf(3) }
 
     Scaffold(
         containerColor = BackgroundGray,
-        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             UserBottomBar(selected = selectedTab, onSelect = {
                 selectedTab = it
@@ -60,11 +64,6 @@ fun UserProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Spacer(modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsTopHeight(WindowInsets.statusBars)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
                     Box(
                         modifier = Modifier
                             .size(80.dp)
@@ -73,7 +72,7 @@ fun UserProfileScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = user.name.get(0).toString(),
+                            text = if (nama.isNotEmpty()) nama[0].toString() else "?",
                             fontSize = 36.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -81,7 +80,7 @@ fun UserProfileScreen(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = user.name,
+                        text = nama,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -100,16 +99,8 @@ fun UserProfileScreen(
             ProfileInfoCard(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 items = listOf(
-                    ProfileInfoItem(
-                        iconRes  = R.drawable.ic_email,
-                        label    = "EMAIL",
-                        value    = user.email
-                    ),
-                    ProfileInfoItem(
-                        iconRes  = R.drawable.ic_phone,
-                        label    = "NOMOR TELEPON",
-                        value    = user.phone
-                    )
+                    ProfileInfoItem(iconRes = R.drawable.ic_email, label = "EMAIL", value = email),
+                    ProfileInfoItem(iconRes = R.drawable.ic_phone, label = "NOMOR TELEPON", value = telepon)
                 )
             )
 
@@ -150,12 +141,16 @@ fun AdminProfileScreen(
     onNavigate: (Int) -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
-    var user = UserData.dataUser[2]
-    var selectedTab by remember { mutableIntStateOf(3) } // Profil aktif
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val session = remember { com.app.rrq.data.local.SessionManager(context) }
 
+    val nama = session.getNama()
+    val email = session.getEmail()
+    val telepon = session.getTelepon()
+
+    var selectedTab by remember { mutableIntStateOf(3) }
     Scaffold(
         containerColor = BackgroundGray,
-        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             AdminBottomBar(selected = selectedTab, onSelect = {
                 selectedTab = it
@@ -169,6 +164,7 @@ fun AdminProfileScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
+            // ── Teal Header dengan Avatar Admin ───────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -180,11 +176,6 @@ fun AdminProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Spacer(modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsTopHeight(WindowInsets.statusBars)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
                     Box(contentAlignment = Alignment.BottomEnd) {
                         Box(
                             modifier = Modifier
@@ -194,7 +185,7 @@ fun AdminProfileScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = user.name.get(0).toString(),
+                                text = if (nama.isNotEmpty()) nama[0].toString() else "?",
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -210,7 +201,7 @@ fun AdminProfileScreen(
                         ) {
                             Image(
                                 painter     = painterResource(id = R.drawable.ic_shield),
-                                contentDescription = user.role.toString(),
+                                contentDescription = "Admin",
                                 modifier    = Modifier.size(14.dp),
                                 colorFilter = ColorFilter.tint(Color.White)
                             )
@@ -220,7 +211,7 @@ fun AdminProfileScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = user.name,
+                        text = nama,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -259,21 +250,9 @@ fun AdminProfileScreen(
             ProfileInfoCard(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 items = listOf(
-                    ProfileInfoItem(
-                        iconRes = R.drawable.ic_email,
-                        label   = "EMAIL",
-                        value   = user.email
-                    ),
-                    ProfileInfoItem(
-                        iconRes = R.drawable.ic_phone,
-                        label   = "NOMOR TELEPON",
-                        value   = user.phone
-                    ),
-                    ProfileInfoItem(
-                        iconRes = R.drawable.ic_shield,
-                        label   = "PERAN",
-                        value   = "Administrator Sistem"
-                    )
+                    ProfileInfoItem(iconRes = R.drawable.ic_email, label = "EMAIL", value = email),
+                    ProfileInfoItem(iconRes = R.drawable.ic_phone, label = "NOMOR TELEPON", value = telepon),
+                    ProfileInfoItem(iconRes = R.drawable.ic_shield, label = "PERAN", value = "Administrator Sistem")
                 )
             )
 

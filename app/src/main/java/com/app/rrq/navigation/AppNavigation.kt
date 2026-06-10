@@ -32,9 +32,6 @@ fun AppNavigation() {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
-                onNavigateToUserDashboard = {
-                    navController.navigate(Screen.Home.route)
-                }
             )
         }
         composable(Screen.Register.route) {
@@ -47,9 +44,6 @@ fun AppNavigation() {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
-                onNavigateToAdminDashboard = {
-                    navController.navigate(Screen.Home.route)
-                }
             )
         }
         composable(Screen.Home.route) {

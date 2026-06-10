@@ -24,17 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
 import com.app.rrq.R
-import com.app.rrq.data.model.UserData
 import com.app.rrq.ui.theme.*
-
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun AppRoot(isAdmin: Boolean = false) {
@@ -47,11 +37,11 @@ fun AppRoot(isAdmin: Boolean = false) {
 fun UserHomeScreen(
     onNavigate: (Int) -> Unit = {}
 ) {
-    var user = UserData.dataUser[1]
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val session = remember { com.app.rrq.data.local.SessionManager(context) }
+    val nama = session.getNama()
+
     var selectedTab by remember { mutableIntStateOf(0) }
-    var isLoading by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         containerColor = BackgroundGray,
@@ -99,7 +89,7 @@ fun UserHomeScreen(
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = user.name,
+                                    text = nama,
                                     color = Color.White,
                                     fontSize = 26.sp,
                                     fontWeight = FontWeight.Bold
@@ -309,7 +299,10 @@ fun ReportItemCard(
 fun AdminHomeScreen(
     onNavigate: (Int) -> Unit = {}
 ) {
-    var user = UserData.dataUser[2]
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val session = remember { com.app.rrq.data.local.SessionManager(context) }
+    val nama = session.getNama()
+
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
@@ -357,7 +350,7 @@ fun AdminHomeScreen(
                                 fontSize = 14.sp
                             )
                             Text(
-                                text = user.name,
+                                text = nama,
                                 color = Color.White,
                                 fontSize = 26.sp,
                                 fontWeight = FontWeight.Bold

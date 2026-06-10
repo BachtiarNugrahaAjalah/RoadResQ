@@ -36,7 +36,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun BuatLaporanPage(
     modifier: Modifier = Modifier,
-    onNavigate: (Int) -> Unit = {}
+    onNavigate: (Int) -> Unit = {},
+    onNavigateBack: () -> Unit = {}
 ) {
     var judul by remember { mutableStateOf("") }
     var kategori by remember { mutableStateOf("") }
