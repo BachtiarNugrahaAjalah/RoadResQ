@@ -1,6 +1,13 @@
 package com.app.rrq.ui.pages.user
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +27,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,7 +45,23 @@ fun BuatLaporanPage(
     viewModel: BuatLaporanViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val repository = remember { LaporanRepository() }
     val categories = listOf("Lubang", "Retak", "Aspal Mengelupas", "Banjir", "Penerangan Rusak", "Marka Pudar", "Lainnya")
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+        uri?.let {
+            scope.launch {
+                val base64 = uriToBase64(context, it)
+                if (base64 != null) {
+                    // Simpan data mentah Base64 (tanpa prefix)
+                    base64Image = base64
+                }
+            }
+        }
+    }
 
     Scaffold(
         containerColor = BackgroundGray,
@@ -54,17 +78,8 @@ fun BuatLaporanPage(
         ) {
 
             Column {
-                Text(
-                    text = "Buat Laporan",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212529)
-                )
-                Text(
-                    text = "Isi detail kerusakan jalan",
-                    fontSize = 14.sp,
-                    color = Color(0xFF6C757D)
-                )
+                Text(text = "Buat Laporan", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF212529))
+                Text(text = "Isi detail kerusakan jalan", fontSize = 14.sp, color = Color(0xFF6C757D))
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -207,28 +222,14 @@ fun BuatLaporanPage(
 }
 
 @Composable
-fun UrgencyButton(
-    text: String,
-    isSelected: Boolean,
-    selectedColor: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
+fun UrgencyButton(text: String, isSelected: Boolean, selectedColor: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Surface(
-        modifier = modifier
-            .height(48.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() },
+        modifier = modifier.height(48.dp).clip(RoundedCornerShape(12.dp)).clickable { onClick() },
         color = if (isSelected) selectedColor else Color(0xFFF1F3F5),
         shape = RoundedCornerShape(12.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = text,
-                color = if (isSelected) Color.White else Color(0xFF495057),
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                fontSize = 14.sp
-            )
+            Text(text = text, color = if (isSelected) Color.White else Color(0xFF495057), fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium, fontSize = 14.sp)
         }
     }
 }

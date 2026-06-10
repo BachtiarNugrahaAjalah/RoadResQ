@@ -1,5 +1,6 @@
 package com.app.rrq.ui.pages.user
 
+import android.util.Base64
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.SpeakerNotes
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
@@ -21,14 +23,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.app.rrq.data.model.Laporan
 import com.app.rrq.data.repository.LaporanRepository
-import com.app.rrq.ui.theme.RoadResQTheme
 
 @Composable
 fun DetailLaporanPage(
@@ -38,17 +38,14 @@ fun DetailLaporanPage(
     onReportsLoaded: (List<Laporan>) -> Unit = {}
 ) {
     var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     val repository = remember { LaporanRepository() }
 
     LaunchedEffect(Unit) {
-        try {
-            allReports = repository.getLaporans()
-            onReportsLoaded(allReports)
-        } catch (e: Exception) {
-            errorMessage = e.message
-        } finally {
+        isLoading = true
+        repository.getSemuaLaporan { listLaporan ->
+            allReports = listLaporan
+            onReportsLoaded(listLaporan)
             isLoading = false
         }
     }
@@ -57,11 +54,6 @@ fun DetailLaporanPage(
         isLoading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = Color(0xFF0EA5E9))
-            }
-        }
-        errorMessage != null -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Terjadi kesalahan: $errorMessage")
             }
         }
         reportIndex !in allReports.indices -> {
@@ -85,6 +77,18 @@ fun DetailLaporanContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Decode Base64 ke ByteArray untuk stabilitas tampilan gambar
+    val imageByteArray = remember(report.gambarUrl) {
+        try {
+            if (report.gambarUrl.isNotEmpty()) {
+                val base64Data = report.gambarUrl.substringAfter("base64,").trim()
+                Base64.decode(base64Data, Base64.DEFAULT)
+            } else null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     Scaffold(
         modifier = modifier,
         containerColor = Color(0xFFF8F9FA)
@@ -125,10 +129,10 @@ fun DetailLaporanContent(
             // Image Section
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(report.Gambar_url)
+                    .data(imageByteArray)
                     .crossfade(true)
                     .build(),
-                contentDescription = report.JudulLaporan,
+                contentDescription = report.judulLaporan,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)
@@ -139,7 +143,7 @@ fun DetailLaporanContent(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Title and Status Card
+            // Title dan Status Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -153,40 +157,30 @@ fun DetailLaporanContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = report.JudulLaporan,
+                            text = report.judulLaporan,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E293B),
                             modifier = Modifier.weight(1f)
                         )
-                        StatusBadge(status = report.Status)
+                        StatusBadge(status = report.status)
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        UrgencyBadge(urgency = report.TingkatUrgensi)
-                        CategoryBadge(category = report.KategoriKerusakan)
+                        UrgencyBadge(urgency = report.tingkatUrgensi)
+                        CategoryBadge(category = report.kategoriKerusakan)
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Location and Date info
-            InfoSectionCard(
-                icon = Icons.Default.LocationOn,
-                label = "LOKASI",
-                value = report.Lokasi
-            )
-
+            // Info Card
+            InfoSectionCard(icon = Icons.Default.LocationOn, label = "LOKASI", value = report.lokasi)
             Spacer(modifier = Modifier.height(16.dp))
-
-            InfoSectionCard(
-                icon = Icons.Default.DateRange,
-                label = "TANGGAL LAPOR",
-                value = report.Tanggal
-            )
+            InfoSectionCard(icon = Icons.Default.DateRange, label = "TANGGAL LAPOR", value = report.tanggal)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -207,11 +201,50 @@ fun DetailLaporanContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = report.Deskripsi,
+                        text = report.deskripsi,
                         fontSize = 15.sp,
                         color = Color(0xFF475569),
                         lineHeight = 22.sp
                     )
+                }
+            }
+
+            // Catatan Admin
+            if (report.statusAdmin.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F9FF)), // Light blue background
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBAE6FD))
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.SpeakerNotes,
+                                contentDescription = null,
+                                tint = Color(0xFF0369A1),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "CATATAN ADMIN",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0369A1),
+                                letterSpacing = 1.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = report.statusAdmin,
+                            fontSize = 15.sp,
+                            color = Color(0xFF0C4A6E),
+                            fontWeight = FontWeight.Medium,
+                            lineHeight = 22.sp
+                        )
+                    }
                 }
             }
 
@@ -270,6 +303,8 @@ fun StatusBadge(status: String) {
     val (bgColor, txtColor) = when (status) {
         "Selesai" -> Color(0xFFDCFCE7) to Color(0xFF22C55E)
         "Diproses" -> Color(0xFFFEF3C7) to Color(0xFFD97706)
+        "Diverifikasi" -> Color(0xFFE0F2FE) to Color(0xFF0284C7)
+        "Ditolak" -> Color(0xFFFEE2E2) to Color(0xFFEF4444)
         "Menunggu" -> Color(0xFFFFF7ED) to Color(0xFFF59E0B)
         else -> Color(0xFFF1F5F9) to Color(0xFF64748B)
     }
@@ -335,24 +370,5 @@ fun CategoryBadge(category: String) {
                 color = Color(0xFF475569)
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DetailLaporanPreview() {
-    val mockReport = Laporan(
-        JudulLaporan = "Jalan Berlubang",
-        KategoriKerusakan = "Infrastruktur",
-        TingkatUrgensi = "Tinggi",
-        Lokasi = "Jakarta",
-        Deskripsi = "Deskripsi laporan...",
-        Gambar_url = "",
-        Status = "Diproses",
-        Tanggal = "2025-05-20",
-        StatusAdmin = "Verified"
-    )
-    RoadResQTheme {
-        DetailLaporanContent(report = mockReport, onBack = {})
     }
 }
