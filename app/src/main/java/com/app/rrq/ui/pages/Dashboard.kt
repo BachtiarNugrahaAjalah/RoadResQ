@@ -43,6 +43,15 @@ fun UserHomeScreen(
 
     var selectedTab by remember { mutableIntStateOf(0) }
 
+    // Load laporan terbaru milik user yang login
+    var laporanTerbaru by remember { mutableStateOf<List<com.app.rrq.data.model.Laporan>>(emptyList()) }
+    val repository = remember { com.app.rrq.data.repository.LaporanRepository() }
+    LaunchedEffect(Unit) {
+        repository.getSemuaLaporan { list ->
+            laporanTerbaru = list.take(3)
+        }
+    }
+
     Scaffold(
         containerColor = BackgroundGray,
         contentWindowInsets = WindowInsets(0),
@@ -109,13 +118,17 @@ fun UserHomeScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
+                    val dikirim  = laporanTerbaru.count { it.status == "Menunggu" || it.status == "Diverifikasi" }
+                    val diproses = laporanTerbaru.count { it.status == "Diproses" }
+                    val selesai  = laporanTerbaru.count { it.status == "Selesai" }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        UserStatCard(label = "Dikirim",  value = "1", color = TealPrimary,  modifier = Modifier.weight(1f))
-                        UserStatCard(label = "Diproses", value = "1", color = OrangeAccent, modifier = Modifier.weight(1f))
-                        UserStatCard(label = "Selesai",  value = "0", color = GreenAccent,  modifier = Modifier.weight(1f))
+                        UserStatCard(label = "Dikirim",  value = dikirim.toString(),  color = TealPrimary,  modifier = Modifier.weight(1f))
+                        UserStatCard(label = "Diproses", value = diproses.toString(), color = OrangeAccent, modifier = Modifier.weight(1f))
+                        UserStatCard(label = "Selesai",  value = selesai.toString(),  color = GreenAccent,  modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -136,14 +149,16 @@ fun UserHomeScreen(
                     sublabel  = "Lapor kerusakan",
                     iconRes   = R.drawable.ic_add_laporan,
                     isPrimary = true,
-                    modifier  = Modifier.weight(1f)
+                    modifier  = Modifier.weight(1f),
+                    onClick   = { onNavigate(1) }
                 )
                 QuickActionCard(
                     label     = "Riwayat",
                     sublabel  = "Lihat semua",
                     iconRes   = R.drawable.ic_history,
                     isPrimary = false,
-                    modifier  = Modifier.weight(1f)
+                    modifier  = Modifier.weight(1f),
+                    onClick   = { onNavigate(2) }
                 )
             }
 
@@ -161,19 +176,39 @@ fun UserHomeScreen(
                     text = "Lihat semua",
                     color = TealPrimary,
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickable { onNavigate(2) }
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            ReportItemCard(
-                title        = "Jalan Berlubang",
-                subtitle     = "Jl untung suropati",
-                leadIconRes  = R.drawable.ic_add_laporan,
-                trailIconRes = R.drawable.ic_arrow_right,
-                modifier     = Modifier.padding(horizontal = 20.dp)
-            )
+            if (laporanTerbaru.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Belum ada laporan. Yuk buat laporan pertamamu!",
+                        color = TextSecondary,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                laporanTerbaru.forEach { laporan ->
+                    ReportItemCard(
+                        title        = laporan.judulLaporan,
+                        subtitle     = laporan.lokasi,
+                        leadIconRes  = R.drawable.ic_add_laporan,
+                        trailIconRes = R.drawable.ic_arrow_right,
+                        modifier     = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                        onClick      = { onNavigate(2) }
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -208,7 +243,8 @@ fun QuickActionCard(
     sublabel: String,
     @DrawableRes iconRes: Int,
     isPrimary: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     val bgColor   = if (isPrimary) TealPrimary else CardWhite
     val textColor = if (isPrimary) Color.White else TextPrimary
@@ -217,7 +253,7 @@ fun QuickActionCard(
     val iconTint  = if (isPrimary) Color.White else TealPrimary
 
     Card(
-        modifier  = modifier.height(120.dp).clickable { },
+        modifier  = modifier.height(120.dp).clickable { onClick() },
         shape     = RoundedCornerShape(18.dp),
         colors    = CardDefaults.cardColors(containerColor = bgColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -254,10 +290,11 @@ fun ReportItemCard(
     subtitle: String,
     @DrawableRes leadIconRes: Int,
     @DrawableRes trailIconRes: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Card(
-        modifier  = modifier.fillMaxWidth().clickable { },
+        modifier  = modifier.fillMaxWidth().clickable { onClick() },
         shape     = RoundedCornerShape(14.dp),
         colors    = CardDefaults.cardColors(containerColor = CardWhite),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -309,8 +346,8 @@ fun AdminHomeScreen(
         containerColor = BackgroundGray,
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
-            AdminBottomBar(selected = selectedTab, onSelect = { 
-                selectedTab = it 
+            AdminBottomBar(selected = selectedTab, onSelect = {
+                selectedTab = it
                 onNavigate(it)
             })
         }

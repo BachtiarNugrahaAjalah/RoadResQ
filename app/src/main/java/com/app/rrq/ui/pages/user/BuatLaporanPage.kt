@@ -158,7 +158,11 @@ fun BuatLaporanPage(
                     Text("Contoh: Lubang besar di Jl. Sudirman", color = Color(0xFFADB5BD))
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color(0xFF212529),
+                    unfocusedTextColor = Color(0xFF212529)
+                )
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -246,7 +250,11 @@ fun BuatLaporanPage(
                     Icon(Icons.Default.LocationOn, null, tint = Color(0xFFADB5BD))
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color(0xFF212529),
+                    unfocusedTextColor = Color(0xFF212529)
+                )
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -263,7 +271,11 @@ fun BuatLaporanPage(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color(0xFF212529),
+                    unfocusedTextColor = Color(0xFF212529)
+                )
             )
 
             Spacer(modifier = Modifier.height(32.dp))

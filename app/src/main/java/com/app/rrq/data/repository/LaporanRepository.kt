@@ -45,14 +45,21 @@ class LaporanRepository {
     }
 
     fun getSemuaLaporan(onResult: (List<Laporan>) -> Unit) {
-        laporanCollection.addSnapshotListener { snapshot, error ->
-            if (error != null) return@addSnapshotListener
-            val list = snapshot?.toObjects(Laporan::class.java) ?: emptyList()
-            val sortedList = list.sortedByDescending { laporan ->
-                try { dateFormat.parse(laporan.tanggal) } catch (e: Exception) { null }
-            }
-            onResult(sortedList)
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            onResult(emptyList())
+            return
         }
+        laporanCollection
+            .whereEqualTo("userId", userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                val list = snapshot?.toObjects(Laporan::class.java) ?: emptyList()
+                val sortedList = list.sortedByDescending { laporan ->
+                    try { dateFormat.parse(laporan.tanggal) } catch (e: Exception) { null }
+                }
+                onResult(sortedList)
+            }
     }
 
     suspend fun updateStatusLaporan(
