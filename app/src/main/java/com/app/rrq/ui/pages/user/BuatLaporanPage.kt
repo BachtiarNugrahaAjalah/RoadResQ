@@ -41,8 +41,7 @@ import com.app.rrq.ui.theme.BackgroundGray
 fun BuatLaporanPage(
     modifier: Modifier = Modifier,
     onNavigate: (Int) -> Unit = {},
-    onNavigateBack: () -> Unit = {},
-    viewModel: BuatLaporanViewModel = viewModel()
+    onNavigateBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val repository = remember { LaporanRepository() }
