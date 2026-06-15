@@ -6,6 +6,9 @@ data class Laporan(
     @get:PropertyName("id") @set:PropertyName("id") @PropertyName("id")
     var id: String = "",
 
+    @get:PropertyName("userId") @set:PropertyName("userId") @PropertyName("userId")
+    var userId: String = "",
+
     @get:PropertyName("JudulLaporan") @set:PropertyName("JudulLaporan") @PropertyName("JudulLaporan")
     var judulLaporan: String = "",
 

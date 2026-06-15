@@ -171,12 +171,11 @@ fun AppNavHost(navController: NavHostController) {
         }
 
         composable(Routes.ADMIN_VERIFIKASI_LAPORAN) {
-
             VerifikasiLaporanPage(
+                reportIndex = 0,
                 onNavigate = { index ->
                     handleAdminNavigation(index, navController)
                 },
-
                 onBack = {
                     navController.popBackStack()
                 }
