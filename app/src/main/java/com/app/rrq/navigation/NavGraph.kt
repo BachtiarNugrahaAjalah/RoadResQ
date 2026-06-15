@@ -91,7 +91,7 @@ fun AppNavHost(navController: NavHostController) {
             )
         }
 
-        // ================= USER =================
+        // USER
 
         composable(Routes.USER_DASHBOARD) {
 
@@ -159,7 +159,7 @@ fun AppNavHost(navController: NavHostController) {
             )
         }
 
-        // ================= ADMIN =================
+        // ADMIN
 
         composable(Routes.ADMIN_DASHBOARD) {
 

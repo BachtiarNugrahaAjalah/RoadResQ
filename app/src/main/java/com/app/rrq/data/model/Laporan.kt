@@ -1,32 +1,35 @@
 package com.app.rrq.data.model
 
-import com.google.gson.annotations.SerializedName
+import com.google.firebase.firestore.PropertyName
 
 data class Laporan(
-    @SerializedName("JudulLaporan")
-    val JudulLaporan: String,
+    @get:PropertyName("id") @set:PropertyName("id") @PropertyName("id")
+    var id: String = "",
 
-    @SerializedName("KategoriKerusakan")
-    val KategoriKerusakan: String,
+    @get:PropertyName("JudulLaporan") @set:PropertyName("JudulLaporan") @PropertyName("JudulLaporan")
+    var judulLaporan: String = "",
 
-    @SerializedName("TingkatUrgensi")
-    val TingkatUrgensi: String,
+    @get:PropertyName("KategoriKerusakan") @set:PropertyName("KategoriKerusakan") @PropertyName("KategoriKerusakan")
+    var kategoriKerusakan: String = "",
 
-    @SerializedName("Lokasi")
-    val Lokasi: String,
+    @get:PropertyName("TingkatUrgensi") @set:PropertyName("TingkatUrgensi") @PropertyName("TingkatUrgensi")
+    var tingkatUrgensi: String = "Sedang",
 
-    @SerializedName("Deskripsi")
-    val Deskripsi: String,
+    @get:PropertyName("Lokasi") @set:PropertyName("Lokasi") @PropertyName("Lokasi")
+    var lokasi: String = "",
 
-    @SerializedName("Gambar_url")
-    val Gambar_url: String,
+    @get:PropertyName("Deskripsi") @set:PropertyName("Deskripsi") @PropertyName("Deskripsi")
+    var deskripsi: String = "",
 
-    @SerializedName("Status")
-    val Status: String,
+    @get:PropertyName("Gambar_url") @set:PropertyName("Gambar_url") @PropertyName("Gambar_url")
+    var gambarUrl: String = "",
 
-    @SerializedName("Tanggal")
-    val Tanggal: String,
+    @get:PropertyName("Status") @set:PropertyName("Status") @PropertyName("Status")
+    var status: String = "Menunggu",
 
-    @SerializedName("StatusAdmin")
-    val StatusAdmin: String
+    @get:PropertyName("Tanggal") @set:PropertyName("Tanggal") @PropertyName("Tanggal")
+    var tanggal: String = "",
+
+    @get:PropertyName("StatusAdmin") @set:PropertyName("StatusAdmin") @PropertyName("StatusAdmin")
+    var statusAdmin: String = ""
 )
