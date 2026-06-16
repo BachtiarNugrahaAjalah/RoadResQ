@@ -1,4 +1,4 @@
-package com.app.rrq.ui.auth
+package com.app.rrq.model
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel

@@ -21,9 +21,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.app.rrq.data.model.Laporan
-import com.app.rrq.data.repository.LaporanRepository
+import com.app.rrq.model.LaporanViewModel
 import com.app.rrq.ui.pages.UserBottomBar
 import com.app.rrq.ui.theme.BackgroundGray
 
@@ -32,27 +33,22 @@ fun RiwayatLaporanPage(
     modifier: Modifier = Modifier,
     onNavigate: (Int) -> Unit = {},
     onNavigateToDetail: (String) -> Unit = {},
-    onReportsLoaded: (List<Laporan>) -> Unit = {}
+    viewModel: LaporanViewModel = viewModel()
 ) {
     var selectedFilter by remember { mutableStateOf("Semua") }
-    var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    val repository = remember { LaporanRepository() }
+    val allReports = viewModel.laporanList
+    val isLoading = viewModel.isFetching
+
+    // PENTING: Refresh data setiap kali halaman ini dibuka
+    // Ini memastikan data yang tampil sesuai dengan user yang sedang login
+    LaunchedEffect(Unit) {
+        viewModel.muatSemuaLaporan()
+    }
 
     val filteredReports = if (selectedFilter == "Semua") {
         allReports
     } else {
-        allReports
         allReports.filter { it.status == selectedFilter }
-    }
-
-    LaunchedEffect(Unit) {
-        isLoading = true
-        repository.getSemuaLaporan { listLaporan ->
-            allReports = listLaporan
-            onReportsLoaded(listLaporan)
-            isLoading = false
-        }
     }
 
     Scaffold(
@@ -229,11 +225,11 @@ fun LaporanCardItem(report: Laporan, onClick: () -> Unit) {
 @Composable
 fun StatusBadgeItem(status: String) {
     val (backgroundColor, textColor) = when (status) {
-        "Selesai" -> Color(0xFFDCFCE7) to Color(0xFF22C55E)
-        "Diproses" -> Color(0xFFFEF3C7) to Color(0xFFD97706)
-        "Diverifikasi" -> Color(0xFFE0F2FE) to Color(0xFF0284C7)
-        "Ditolak" -> Color(0xFFFEE2E2) to Color(0xFFEF4444)
-        "Menunggu" -> Color(0xFFFFF7ED) to Color(0xFFF59E0B)
+        "Selesai" -> Color(0xFFDCFCE7) to Color(0xFF166534)
+        "Diproses" -> Color(0xFFDBEAFE) to Color(0xFF1E40AF)
+        "Diverifikasi" -> Color(0xFFE0F2FE) to Color(0xFF075985)
+        "Ditolak" -> Color(0xFFFEE2E2) to Color(0xFF991B1B)
+        "Menunggu" -> Color(0xFFFEF3C7) to Color(0xFF92400E)
         else -> Color(0xFFF1F5F9) to Color(0xFF64748B)
     }
 

@@ -181,11 +181,11 @@ fun LaporanCardCustom(laporan: Laporan, onClick: () -> Unit) {
                 )
 
                 val (bgColor, txtColor) = when (laporan.status) {
-                    "Selesai" -> Color(0xFFDCFCE7) to Color(0xFF22C55E)
-                    "Diproses" -> Color(0xFFFEF3C7) to Color(0xFFD97706)
-                    "Diverifikasi" -> Color(0xFFE0F2FE) to Color(0xFF0284C7)
-                    "Ditolak" -> Color(0xFFFEE2E2) to Color(0xFFEF4444)
-                    "Menunggu" -> Color(0xFFFFF7ED) to Color(0xFFF59E0B)
+                    "Selesai" -> Color(0xFFDCFCE7) to Color(0xFF166534)
+                    "Diproses" -> Color(0xFFDBEAFE) to Color(0xFF1E40AF)
+                    "Diverifikasi" -> Color(0xFFE0F2FE) to Color(0xFF075985)
+                    "Ditolak" -> Color(0xFFFEE2E2) to Color(0xFF991B1B)
+                    "Menunggu" -> Color(0xFFFEF3C7) to Color(0xFF92400E)
                     else -> Color(0xFFF1F5F9) to Color(0xFF64748B)
                 }
 
@@ -241,7 +241,8 @@ fun LaporanCardCustom(laporan: Laporan, onClick: () -> Unit) {
                         color = when (laporan.tingkatUrgensi) {
                             "Tinggi" -> Color(0xFFFEE2E2)
                             "Sedang" -> Color(0xFFFEF3C7)
-                            else -> Color(0xFFE5E7EB)
+                            "Rendah" -> Color(0xFFDCFCE7)
+                            else -> Color(0xFFF1F3F5)
                         }
                     ) {
                         Text(
@@ -254,8 +255,9 @@ fun LaporanCardCustom(laporan: Laporan, onClick: () -> Unit) {
                             fontWeight = FontWeight.Bold,
                             color = when (laporan.tingkatUrgensi) {
                                 "Tinggi" -> Color(0xFFEF4444)
-                                "Sedang" -> Color(0xFFD97706)
-                                else -> Color(0xFF6B7280)
+                                "Sedang" -> Color(0xFFF59E0B)
+                                "Rendah" -> Color(0xFF22C55E)
+                                else -> Color(0xFF6C757D)
                             }
                         )
                     }

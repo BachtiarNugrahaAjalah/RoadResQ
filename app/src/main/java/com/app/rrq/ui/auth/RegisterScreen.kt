@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.rrq.data.repository.Resource
+import com.app.rrq.model.RegisterViewModel
 
 @Composable
 fun RegisterScreen(

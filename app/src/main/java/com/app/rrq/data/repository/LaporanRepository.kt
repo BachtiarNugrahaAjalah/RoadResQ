@@ -3,6 +3,7 @@ package com.app.rrq.data.repository
 import com.app.rrq.data.model.Laporan
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -45,13 +46,13 @@ class LaporanRepository {
         }
     }
 
-    fun getSemuaLaporan(onResult: (List<Laporan>) -> Unit) {
+    fun getSemuaLaporan(onResult: (List<Laporan>) -> Unit): ListenerRegistration? {
         val userId = auth.currentUser?.uid
         if (userId == null) {
             onResult(emptyList())
-            return
+            return null
         }
-        laporanCollection
+        return laporanCollection
             .whereEqualTo("userId", userId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
@@ -64,8 +65,8 @@ class LaporanRepository {
     }
 
     // Untuk admin: ambil SEMUA laporan dari semua user (tanpa filter userId)
-    fun getSemuaLaporanAdmin(onResult: (List<Laporan>) -> Unit) {
-        laporanCollection
+    fun getSemuaLaporanAdmin(onResult: (List<Laporan>) -> Unit): ListenerRegistration {
+        return laporanCollection
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
                 val list = snapshot?.toObjects(Laporan::class.java) ?: emptyList()
@@ -76,8 +77,8 @@ class LaporanRepository {
             }
     }
 
-    fun getLaporanById(id: String, onResult: (Laporan?) -> Unit) {
-        laporanCollection.document(id)
+    fun getLaporanById(id: String, onResult: (Laporan?) -> Unit): ListenerRegistration {
+        return laporanCollection.document(id)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     onResult(null)

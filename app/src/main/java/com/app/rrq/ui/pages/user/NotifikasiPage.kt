@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,12 +26,15 @@ fun NotifikasiPage(onBack: () -> Unit, onNavigateToDetail: (String) -> Unit = {}
     val repository = remember { LaporanRepository() }
     var laporanList by remember { mutableStateOf<List<Laporan>>(emptyList()) }
 
-    // Listen realtime — kalau status berubah, langsung update
     LaunchedEffect(Unit) {
         repository.getSemuaLaporan { list ->
-            // Tampilkan laporan yang sudah diproses/diupdate oleh admin
-            // (status berubah dari "Menunggu" ATAU sudah ada catatan admin)
-            laporanList = list.filter { it.status != "Menunggu" || it.statusAdmin.isNotEmpty() }
+            laporanList = list.filter { 
+                it.status == "Diverifikasi" || 
+                it.status == "Diproses" || 
+                it.status == "Selesai" || 
+                it.status == "Ditolak" ||
+                it.statusAdmin.isNotEmpty() 
+            }.sortedByDescending { it.tanggal }
         }
     }
 
@@ -62,7 +64,7 @@ fun NotifikasiPage(onBack: () -> Unit, onNavigateToDetail: (String) -> Unit = {}
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Belum ada notifikasi", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Belum ada notifikasi terbaru", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             LazyColumn(
@@ -80,6 +82,22 @@ fun NotifikasiPage(onBack: () -> Unit, onNavigateToDetail: (String) -> Unit = {}
 
 @Composable
 fun NotifikasiCard(laporan: Laporan, onClick: () -> Unit = {}) {
+    val statusColor = when (laporan.status) {
+        "Diverifikasi" -> Color(0xFF0284C7) // Blue
+        "Selesai" -> Color(0xFF10B981)      // Green
+        "Ditolak" -> Color(0xFFEF4444)      // Red
+        "Diproses" -> Color(0xFFF59E0B)     // Orange
+        else -> TealPrimary
+    }
+
+    val notificationTitle = when (laporan.status) {
+        "Diverifikasi" -> "Laporan Diverifikasi"
+        "Diproses" -> "Laporan Sedang Diproses"
+        "Selesai" -> "Laporan Telah Selesai"
+        "Ditolak" -> "Laporan Ditolak"
+        else -> "Update Laporan"
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = com.app.rrq.ui.theme.CardWhite),
@@ -87,29 +105,41 @@ fun NotifikasiCard(laporan: Laporan, onClick: () -> Unit = {}) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Update Laporan: ${laporan.judulLaporan}",
+                text = "$notificationTitle: ${laporan.judulLaporan}",
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                color = TextPrimary
             )
             Spacer(Modifier.height(4.dp))
-            Text(
-                text = "Status: ${laporan.status}",
-                fontSize = 13.sp,
-                color = TealPrimary
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Status: ",
+                    fontSize = 13.sp,
+                    color = TextSecondary
+                )
+                Text(
+                    text = laporan.status,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = statusColor
+                )
+            }
+            
             if (laporan.statusAdmin.isNotEmpty()) {
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(6.dp))
                 Text(
                     text = "Catatan Admin: ${laporan.statusAdmin}",
                     fontSize = 12.sp,
-                    color = TextSecondary
+                    color = TextSecondary,
+                    lineHeight = 16.sp
                 )
             }
-            Spacer(Modifier.height(4.dp))
+            
+            Spacer(Modifier.height(8.dp))
             Text(
                 text = laporan.tanggal,
                 fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.primary
+                color = Color.Gray
             )
         }
     }

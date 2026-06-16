@@ -7,50 +7,83 @@ import com.app.rrq.data.local.SessionManager
 import com.app.rrq.data.model.request.LoginRequest
 import com.app.rrq.data.model.response.LoginResponse
 import com.app.rrq.data.remote.retrofit.ApiClient
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class AuthRepository {
 
     private val apiService = ApiClient.apiService
+    // Inisialisasi sekali saja (Singleton-like behavior)
+    private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
 
     fun login(loginRequest: LoginRequest): LiveData<Resource<LoginResponse>> {
         val result = MutableLiveData<Resource<LoginResponse>>()
         result.postValue(Resource.Loading())
 
         apiService.login(loginRequest).enqueue(object : Callback<LoginResponse> {
-
-            override fun onResponse(
-                call: Call<LoginResponse>,
-                response: Response<LoginResponse>
-            ) {
+            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                 if (response.isSuccessful) {
-                    response.body()?.let {
-                        result.postValue(Resource.Success(it))
-                    } ?: run {
-                        result.postValue(Resource.Error("Response kosong"))
-                    }
+                    response.body()?.let { result.postValue(Resource.Success(it)) }
+                        ?: result.postValue(Resource.Error("Response kosong"))
                 } else {
                     val errorMessage = try {
                         val errorJson = response.errorBody()?.string()
-                        val jsonObject = JSONObject(errorJson)
-                        jsonObject.getString("message")
-                    } catch (e: Exception) {
-                        "Username atau password salah"
-                    }
+                        JSONObject(errorJson).getString("message")
+                    } catch (e: Exception) { "Username atau password salah" }
                     result.postValue(Resource.Error(errorMessage))
                 }
             }
-
             override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
                 result.postValue(Resource.Error(t.message ?: "Gagal terhubung ke server"))
             }
         })
-
         return result
+    }
+
+    fun loginFirebase(
+        context: Context,
+        email: String,
+        password: String,
+        onResult: (Resource<String>) -> Unit
+    ) {
+        val session = SessionManager(context)
+
+        // Firebase Auth login
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnSuccessListener { authResult ->
+                val uid = authResult.user?.uid ?: return@addOnSuccessListener
+                
+                // Ambil data dari Firestore
+                firestore.collection("users").document(uid).get()
+                    .addOnSuccessListener { doc ->
+                        if (doc.exists()) {
+                            // Mencoba membaca field baru (name/phone), jika tidak ada pakai field lama (nama/telepon)
+                            val role = doc.getString("role") ?: "user"
+                            val nama = doc.getString("name") ?: doc.getString("nama") ?: ""
+                            val telepon = doc.getString("phone") ?: doc.getString("telepon") ?: ""
+                            
+                            session.saveUser(nama, email, telepon, role.lowercase(), uid)
+                            onResult(Resource.Success(role.lowercase()))
+                        } else {
+                            onResult(Resource.Error("Data user tidak ditemukan di database"))
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        onResult(Resource.Error(e.message ?: "Gagal mengambil data profil"))
+                    }
+            }
+            .addOnFailureListener { e ->
+                onResult(Resource.Error("Email atau password salah"))
+            }
     }
 
     fun register(
@@ -60,59 +93,30 @@ class AuthRepository {
         password: String,
         onResult: (Resource<Unit>) -> Unit
     ) {
-        val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
-        val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-
         auth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { authResult ->
                 val uid = authResult.user?.uid ?: return@addOnSuccessListener
+                
+                val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val currentDate = dateFormat.format(Date())
+
                 val userData = mapOf(
-                    "nama" to nama,
+                    "userId" to uid, // Menyimpan UID sebagai field 'userId'
+                    "name" to nama,
                     "email" to email,
-                    "telepon" to telepon,
-                    "role" to "user"
+                    "phone" to telepon,
+                    "role" to "USER",
+                    "status" to "AKTIF",
+                    "date" to currentDate
                 )
+                
                 firestore.collection("users").document(uid)
                     .set(userData)
-                    .addOnSuccessListener {
-                        onResult(Resource.Success(Unit))
-                    }
-                    .addOnFailureListener { e ->
-                        onResult(Resource.Error(e.message ?: "Gagal menyimpan data"))
-                    }
+                    .addOnSuccessListener { onResult(Resource.Success(Unit)) }
+                    .addOnFailureListener { e -> onResult(Resource.Error(e.message ?: "Gagal menyimpan data")) }
             }
             .addOnFailureListener { e ->
                 onResult(Resource.Error(e.message ?: "Gagal mendaftar"))
-            }
-    }
-
-    fun loginFirebase(
-        context: Context,
-        email: String,
-        password: String,
-        onResult: (Resource<String>) -> Unit
-    ) {
-        val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
-        val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-        val session = SessionManager(context)
-
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnSuccessListener { authResult ->
-                val uid = authResult.user?.uid ?: return@addOnSuccessListener
-                firestore.collection("users").document(uid).get()
-                    .addOnSuccessListener { doc ->
-                        val role = doc.getString("role") ?: "user"
-                        val nama = doc.getString("nama") ?: ""
-                        val telepon = doc.getString("telepon") ?: ""
-                        session.saveUser(nama, email, telepon, role, uid)
-                        onResult(Resource.Success(role))
-                    }
-                    .addOnFailureListener { e ->
-                        onResult(Resource.Error(e.message ?: "Gagal ambil data user"))
-                    }
-            }
-            .addOnFailureListener { e ->
-                onResult(Resource.Error(e.message ?: "Email atau password salah"))
             }
     }
 }

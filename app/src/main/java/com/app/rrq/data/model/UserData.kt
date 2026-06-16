@@ -3,20 +3,23 @@ package com.app.rrq.data.model
 object UserData {
     val dataUser = listOf(
         User(
-            "Indriyani Talita Putri",
-            "indritp3@gmail.com",
-            "089504633633",
-            "24 Apr 2026",
+            userId = "1",
+            name = "Indriyani Talita Putri",
+            email = "indritp3@gmail.com",
+            phone = "089504633633",
+            date = "24 Apr 2026",
             status = Status.BANNED
         ),
         User(
-            "Achira DL",
-            "acihra@gmail.com",
-            "08157234946",
-            "23 Apr 2026",
+            userId = "2",
+            name = "Achira DL",
+            email = "acihra@gmail.com",
+            phone = "08157234946",
+            date = "23 Apr 2026",
             role = Role.USER
         ),
         User(
+            userId = "3",
             name = "Fiki",
             email = "tbuyut@gmail.com",
             phone = "08112121121",
