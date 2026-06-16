@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -29,7 +29,6 @@ import coil.request.ImageRequest
 import com.app.rrq.data.model.Laporan
 import com.app.rrq.data.repository.LaporanRepository
 import com.app.rrq.ui.theme.TextPrimary
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,9 +40,7 @@ fun VerifikasiLaporanPage(
 ) {
     var laporan by remember { mutableStateOf<Laporan?>(null) }
     var isLoading by remember { mutableStateOf(true) }
-    var namaPelapor by remember { mutableStateOf("") }
     val repository = remember { LaporanRepository() }
-    val db = remember { FirebaseFirestore.getInstance() }
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val focusManager = LocalFocusManager.current
@@ -52,18 +49,6 @@ fun VerifikasiLaporanPage(
         repository.getLaporanById(laporanId) { result ->
             laporan = result
             isLoading = false
-
-            // Ambil nama pelapor dari Firestore berdasarkan userId
-            val uid = result?.userId
-            if (!uid.isNullOrEmpty()) {
-                db.collection("users").document(uid).get()
-                    .addOnSuccessListener { doc ->
-                        namaPelapor = doc.getString("nama") ?: "Tidak diketahui"
-                    }
-                    .addOnFailureListener {
-                        namaPelapor = "Tidak diketahui"
-                    }
-            }
         }
     }
 
@@ -101,6 +86,10 @@ fun VerifikasiLaporanPage(
             var isUpdating by remember { mutableStateOf(false) }
             var isSavingCatatan by remember { mutableStateOf(false) }
 
+            // Logika: Tampilkan catatan HANYA jika sudah diverifikasi (Diverifikasi, Diproses, Selesai)
+            val isVerified = data.status != "Menunggu" && data.status != "Ditolak"
+            val canEditNote = data.status == "Diverifikasi" || data.status == "Diproses"
+
             val imageByteArray = remember(data.gambarUrl) {
                 try {
                     if (data.gambarUrl.isNotEmpty()) {
@@ -136,7 +125,7 @@ fun VerifikasiLaporanPage(
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Row {
-                            ChipAdmin(data.tingkatUrgensi)
+                            UrgensiBadgeAdmin(data.tingkatUrgensi)
                             Spacer(modifier = Modifier.width(8.dp))
                             ChipAdmin(data.kategoriKerusakan)
                         }
@@ -150,124 +139,156 @@ fun VerifikasiLaporanPage(
                 Card(colors = CardDefaults.cardColors(containerColor = Color.White),
                     shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        // Tampilkan nama pelapor dari Firebase
-                        InfoRowAdmin(Icons.Default.Person, "PELAPOR",
-                            if (namaPelapor.isNotEmpty()) namaPelapor else "Memuat...")
-                        Spacer(modifier = Modifier.height(12.dp))
                         InfoRowAdmin(Icons.Default.LocationOn, "LOKASI", data.lokasi)
                         Spacer(modifier = Modifier.height(12.dp))
                         InfoRowAdmin(Icons.Default.DateRange, "TANGGAL", data.tanggal)
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Header "Catatan Admin" dengan tombol Simpan di kanan
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Catatan Admin",
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                    TextButton(
-                        onClick = {
-                            focusManager.clearFocus()
-                            coroutineScope.launch {
-                                isSavingCatatan = true
-                                repository.updateStatusLaporan(data.id, data.status, catatanAdmin)
-                                snackbarHostState.showSnackbar("Catatan berhasil disimpan")
-                                isSavingCatatan = false
-                            }
-                        },
-                        enabled = !isSavingCatatan,
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                
+                // --- BAGIAN CATATAN ADMIN (Hanya tampil jika sudah diverifikasi) ---
+                if (isVerified) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (isSavingCatatan) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(14.dp),
-                                strokeWidth = 2.dp,
-                                color = Color(0xFF0C7497)
-                            )
-                        } else {
-                            Text(
-                                "Simpan",
-                                color = Color(0xFF0C7497),
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp
-                            )
+                        Text(
+                            "Catatan Admin",
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        if (canEditNote) {
+                            TextButton(
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    coroutineScope.launch {
+                                        isSavingCatatan = true
+                                        repository.updateStatusLaporan(data.id, data.status, catatanAdmin)
+                                        snackbarHostState.showSnackbar("Catatan berhasil disimpan")
+                                        isSavingCatatan = false
+                                    }
+                                },
+                                enabled = !isSavingCatatan,
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                            ) {
+                                if (isSavingCatatan) {
+                                    CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
+                                } else {
+                                    Text("Simpan", color = Color(0xFF0C7497), fontWeight = FontWeight.SemiBold)
+                                }
+                            }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = catatanAdmin,
+                        onValueChange = { catatanAdmin = it },
+                        enabled = canEditNote,
+                        placeholder = { Text("Tulis catatan perkembangan...") },
+                        modifier = Modifier.fillMaxWidth().height(100.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF0C7497),
+                            unfocusedBorderColor = if (catatanAdmin.isNotEmpty()) Color(0xFF0C7497).copy(alpha = 0.5f) else Color(0xFFD1D5DB),
+                            disabledBorderColor = Color(0xFFE2E8F0),
+                            disabledTextColor = Color.Gray
+                        )
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // TextField catatan admin dengan placeholder berwarna saat ada isi
-                OutlinedTextField(
-                    value = catatanAdmin,
-                    onValueChange = { catatanAdmin = it },
-                    placeholder = {
-                        Text(
-                            "Tulis catatan perkembangan untuk pelapor...",
-                            // Placeholder berwarna biru-abu saat field kosong, berubah jelas saat diisi
-                            color = if (catatanAdmin.isEmpty()) Color(0xFFB0C4D8) else Color(0xFF0C7497)
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF0C7497),
-                        unfocusedBorderColor = if (catatanAdmin.isNotEmpty()) Color(0xFF0C7497).copy(alpha = 0.5f) else Color(0xFFD1D5DB),
-                        focusedTextColor = Color(0xFF1E293B),
-                        unfocusedTextColor = Color(0xFF1E293B),
-                        cursorColor = Color(0xFF0C7497)
-                    )
-                )
-
                 Spacer(modifier = Modifier.height(20.dp))
-                if (data.status == "Menunggu") {
-                    Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                isUpdating = true
-                                repository.updateStatusLaporan(data.id, "Diverifikasi", catatanAdmin)
-                                snackbarHostState.showSnackbar("Laporan diverifikasi")
-                                isUpdating = false
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF28A745)),
-                        enabled = !isUpdating
-                    ) { Text("Verifikasi Laporan", color = Color.White) }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedButton(onClick = { showDialogTolak = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        border = BorderStroke(1.dp, Color.Red), enabled = !isUpdating) {
-                        Text("Tolak Laporan", color = Color.Red)
-                    }
-                } else {
-                    Text("Update Status:", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextPrimary)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StatusOptionButtonAdmin(
-                            "Diproses",
-                            data.status == "Diproses",
-                            Modifier.weight(1f),
-                            selectedColor = Color(0xFFD97706)
-                        ) {
-                            coroutineScope.launch { repository.updateStatusLaporan(data.id, "Diproses", catatanAdmin) }
+
+                // Logika Tombol Aksi Status
+                when (data.status) {
+                    "Menunggu" -> {
+                        Button(
+                            onClick = {
+                                coroutineScope.launch {
+                                    isUpdating = true
+                                    repository.updateStatusLaporan(data.id, "Diverifikasi", "")
+                                    laporan = data.copy(status = "Diverifikasi")
+                                    snackbarHostState.showSnackbar("Laporan diverifikasi")
+                                    isUpdating = false
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF28A745)),
+                            enabled = !isUpdating
+                        ) { Text("Verifikasi Laporan", color = Color.White) }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(onClick = { showDialogTolak = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            border = BorderStroke(1.dp, Color.Red), enabled = !isUpdating) {
+                            Text("Tolak Laporan", color = Color.Red)
                         }
-                        StatusOptionButtonAdmin(
-                            "Selesai",
-                            data.status == "Selesai",
-                            Modifier.weight(1f),
-                            selectedColor = Color(0xFF28A745)
+                    }
+                    "Diverifikasi", "Diproses" -> {
+                        Text("Update Status:", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextPrimary)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            StatusOptionButtonAdmin(
+                                "Diproses",
+                                data.status == "Diproses",
+                                Modifier.weight(1f),
+                                selectedColor = Color(0xFF1E40AF)
+                            ) {
+                                if (data.status != "Diproses") {
+                                    coroutineScope.launch { 
+                                        repository.updateStatusLaporan(data.id, "Diproses", catatanAdmin)
+                                        laporan = data.copy(status = "Diproses", statusAdmin = catatanAdmin)
+                                    }
+                                }
+                            }
+                            StatusOptionButtonAdmin(
+                                "Selesai",
+                                data.status == "Selesai",
+                                Modifier.weight(1f),
+                                selectedColor = Color(0xFF166534)
+                            ) {
+                                coroutineScope.launch { 
+                                    repository.updateStatusLaporan(data.id, "Selesai", catatanAdmin)
+                                    laporan = data.copy(status = "Selesai", statusAdmin = catatanAdmin)
+                                }
+                            }
+                        }
+                    }
+                    "Selesai", "Ditolak" -> {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            coroutineScope.launch { repository.updateStatusLaporan(data.id, "Selesai", catatanAdmin) }
+                            Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                                Text(
+                                    text = "Laporan ini sudah berstatus ${data.status.uppercase()}.",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = Color.DarkGray,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                                if (data.status == "Ditolak" && data.statusAdmin.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Alasan: ${data.statusAdmin}",
+                                        color = Color.Red,
+                                        fontSize = 13.sp,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Status laporan final dan tidak dapat diubah kembali.",
+                                        color = Color.Gray,
+                                        fontSize = 12.sp,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -286,6 +307,7 @@ fun VerifikasiLaporanPage(
                         Button(onClick = {
                             coroutineScope.launch {
                                 repository.updateStatusLaporan(data.id, "Ditolak", alasanTolak)
+                                laporan = data.copy(status = "Ditolak", statusAdmin = alasanTolak)
                                 showDialogTolak = false
                             }
                         }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
@@ -321,11 +343,11 @@ fun InfoRowAdmin(icon: androidx.compose.ui.graphics.vector.ImageVector, label: S
 @Composable
 fun StatusBadgeAdmin(status: String) {
     val (backgroundColor, textColor) = when (status) {
-        "Selesai" -> Color(0xFFDCFCE7) to Color(0xFF22C55E)
-        "Diproses" -> Color(0xFFFEF3C7) to Color(0xFFD97706)
-        "Diverifikasi" -> Color(0xFFE0F2FE) to Color(0xFF0284C7)
-        "Ditolak" -> Color(0xFFFEE2E2) to Color(0xFFEF4444)
-        "Menunggu" -> Color(0xFFFFF7ED) to Color(0xFFF59E0B)
+        "Selesai" -> Color(0xFFDCFCE7) to Color(0xFF166534)
+        "Diproses" -> Color(0xFFDBEAFE) to Color(0xFF1E40AF)
+        "Diverifikasi" -> Color(0xFFE0F2FE) to Color(0xFF075985)
+        "Ditolak" -> Color(0xFFFEE2E2) to Color(0xFF991B1B)
+        "Menunggu" -> Color(0xFFFEF3C7) to Color(0xFF92400E)
         else -> Color(0xFFF1F5F9) to Color(0xFF64748B)
     }
 
@@ -341,11 +363,31 @@ fun StatusBadgeAdmin(status: String) {
 }
 
 @Composable
+fun UrgensiBadgeAdmin(urgensi: String) {
+    val (backgroundColor, textColor) = when (urgensi) {
+        "Tinggi" -> Color(0xFFFEE2E2) to Color(0xFFEF4444)
+        "Sedang" -> Color(0xFFFEF3C7) to Color(0xFFF59E0B)
+        "Rendah" -> Color(0xFFDCFCE7) to Color(0xFF22C55E)
+        else -> Color(0xFFF1F3F5) to Color(0xFF6C757D)
+    }
+
+    Surface(color = backgroundColor, shape = RoundedCornerShape(16.dp)) {
+        Text(
+            text = urgensi,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+    }
+}
+
+@Composable
 fun StatusOptionButtonAdmin(
     label: String,
     isSelected: Boolean,
     modifier: Modifier,
-    selectedColor: Color = Color(0xFF007BFF),
+    selectedColor: Color,
     onClick: () -> Unit
 ) {
     OutlinedButton(

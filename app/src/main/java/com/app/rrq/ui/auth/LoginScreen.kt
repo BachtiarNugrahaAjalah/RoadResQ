@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.rrq.R
 import com.app.rrq.data.repository.Resource
+import com.app.rrq.model.LoginViewModel
 
 val RoadResQTeal = Color(0xFF0C8FBA)
 val RoadResQLightBg = Color(0xFFF0F4F8)
@@ -40,6 +41,7 @@ val RoadResQLightBg = Color(0xFFF0F4F8)
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onLoginSuccess: (String) -> Unit,
+    onBack: () -> Unit,
     viewModel: LoginViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -92,10 +94,10 @@ fun LoginScreen(
                 .padding(horizontal = 24.dp)
                 .padding(top = 48.dp, bottom = 32.dp)
         ) {
-            IconButton(onClick = {}, modifier = Modifier.offset(x = (-12).dp)) {
+            IconButton(onClick = onBack, modifier = Modifier.offset(x = (-12).dp)) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = null,
+                    contentDescription = "Kembali",
                     tint = Color.Black
                 )
             }
