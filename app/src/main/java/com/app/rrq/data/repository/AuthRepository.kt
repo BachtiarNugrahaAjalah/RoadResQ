@@ -21,7 +21,7 @@ import java.util.Locale
 class AuthRepository {
 
     private val apiService = ApiClient.apiService
-    // Inisialisasi sekali saja (Singleton-like behavior)
+
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
 
@@ -66,7 +66,14 @@ class AuthRepository {
                 firestore.collection("users").document(uid).get()
                     .addOnSuccessListener { doc ->
                         if (doc.exists()) {
-                            // Mencoba membaca field baru (name/phone), jika tidak ada pakai field lama (nama/telepon)
+                            val status = doc.getString("status") ?: "AKTIF"
+                            
+                            if (status == "BANNED") {
+                                auth.signOut() // Logout user karena diblokir
+                                onResult(Resource.Error("Akun Anda telah di-banned. Silakan hubungi admin."))
+                                return@addOnSuccessListener
+                            }
+
                             val role = doc.getString("role") ?: "user"
                             val nama = doc.getString("name") ?: doc.getString("nama") ?: ""
                             val telepon = doc.getString("phone") ?: doc.getString("telepon") ?: ""
@@ -74,7 +81,8 @@ class AuthRepository {
                             session.saveUser(nama, email, telepon, role.lowercase(), uid)
                             onResult(Resource.Success(role.lowercase()))
                         } else {
-                            onResult(Resource.Error("Data user tidak ditemukan di database"))
+                            auth.signOut() // Logout user jika data tidak ada (terhapus)
+                            onResult(Resource.Error("Akun tidak ditemukan atau telah dihapus."))
                         }
                     }
                     .addOnFailureListener { e ->
@@ -101,7 +109,7 @@ class AuthRepository {
                 val currentDate = dateFormat.format(Date())
 
                 val userData = mapOf(
-                    "userId" to uid, // Menyimpan UID sebagai field 'userId'
+                    "userId" to uid,
                     "name" to nama,
                     "email" to email,
                     "phone" to telepon,

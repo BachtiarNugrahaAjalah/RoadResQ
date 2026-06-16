@@ -133,7 +133,7 @@ fun BuatLaporanPage(
                     viewModel.kirimLaporan(
                         onSuccess = {
                             Toast.makeText(context, "Laporan berhasil dikirim", Toast.LENGTH_SHORT).show()
-                            onNavigate(2) // Ke Riwayat
+                            onNavigate(2)
                         },
                         onError = { pesan ->
                             Toast.makeText(context, pesan, Toast.LENGTH_LONG).show()

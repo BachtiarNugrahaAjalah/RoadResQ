@@ -64,7 +64,6 @@ class LaporanRepository {
             }
     }
 
-    // Untuk admin: ambil SEMUA laporan dari semua user (tanpa filter userId)
     fun getSemuaLaporanAdmin(onResult: (List<Laporan>) -> Unit): ListenerRegistration {
         return laporanCollection
             .addSnapshotListener { snapshot, error ->

@@ -7,6 +7,5 @@ import androidx.navigation.compose.rememberNavController
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    // Gunakan AppNavHost dari NavGraph.kt sebagai satu-satunya pengatur navigasi
     AppNavHost(navController = navController)
 }
