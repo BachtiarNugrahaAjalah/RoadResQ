@@ -88,10 +88,6 @@ class LaporanViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Memuat laporan hanya untuk user yang sedang login.
-     * Membersihkan list terlebih dahulu untuk memastikan tidak ada data user lain yang tertinggal.
-     */
     fun muatSemuaLaporan() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         if (uid == null) {
@@ -102,12 +98,10 @@ class LaporanViewModel : ViewModel() {
 
         isFetching = true
         listenerRegistration?.remove()
-        
-        // Reset list agar data user lama tidak tampil saat loading data baru
+
         laporanList = emptyList() 
 
         listenerRegistration = repository.getSemuaLaporan { list ->
-            // Filter tambahan di sisi client untuk memastikan keamanan data
             laporanList = list.filter { it.userId == uid }
             isFetching = false
         }

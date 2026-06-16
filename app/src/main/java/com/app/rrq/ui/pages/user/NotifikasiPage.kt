@@ -83,10 +83,10 @@ fun NotifikasiPage(onBack: () -> Unit, onNavigateToDetail: (String) -> Unit = {}
 @Composable
 fun NotifikasiCard(laporan: Laporan, onClick: () -> Unit = {}) {
     val statusColor = when (laporan.status) {
-        "Diverifikasi" -> Color(0xFF0284C7) // Blue
-        "Selesai" -> Color(0xFF10B981)      // Green
-        "Ditolak" -> Color(0xFFEF4444)      // Red
-        "Diproses" -> Color(0xFFF59E0B)     // Orange
+        "Diverifikasi" -> Color(0xFF0284C7)
+        "Selesai" -> Color(0xFF10B981)
+        "Ditolak" -> Color(0xFFEF4444)
+        "Diproses" -> Color(0xFFF59E0B)
         else -> TealPrimary
     }
 

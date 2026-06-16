@@ -39,8 +39,6 @@ fun RiwayatLaporanPage(
     val allReports = viewModel.laporanList
     val isLoading = viewModel.isFetching
 
-    // PENTING: Refresh data setiap kali halaman ini dibuka
-    // Ini memastikan data yang tampil sesuai dengan user yang sedang login
     LaunchedEffect(Unit) {
         viewModel.muatSemuaLaporan()
     }
