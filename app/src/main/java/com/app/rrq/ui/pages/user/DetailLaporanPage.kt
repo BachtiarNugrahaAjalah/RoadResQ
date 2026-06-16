@@ -32,20 +32,17 @@ import com.app.rrq.data.repository.LaporanRepository
 
 @Composable
 fun DetailLaporanPage(
-    reportIndex: Int,
+    laporanId: String,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    onReportsLoaded: (List<Laporan>) -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
-    var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
+    var laporan by remember { mutableStateOf<Laporan?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     val repository = remember { LaporanRepository() }
 
     LaunchedEffect(Unit) {
-        isLoading = true
-        repository.getSemuaLaporan { listLaporan ->
-            allReports = listLaporan
-            onReportsLoaded(listLaporan)
+        repository.getLaporanById(laporanId) { result ->
+            laporan = result
             isLoading = false
         }
     }
@@ -56,14 +53,14 @@ fun DetailLaporanPage(
                 CircularProgressIndicator(color = Color(0xFF0EA5E9))
             }
         }
-        reportIndex !in allReports.indices -> {
+        laporan == null -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("Data laporan tidak ditemukan")
             }
         }
         else -> {
             DetailLaporanContent(
-                report = allReports[reportIndex],
+                report = laporan!!,
                 onBack = onBack,
                 modifier = modifier
             )
@@ -77,177 +74,90 @@ fun DetailLaporanContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Decode Base64 ke ByteArray untuk stabilitas tampilan gambar
     val imageByteArray = remember(report.gambarUrl) {
         try {
             if (report.gambarUrl.isNotEmpty()) {
                 val base64Data = report.gambarUrl.substringAfter("base64,").trim()
-                Base64.decode(base64Data, Base64.DEFAULT)
+                android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT)
             } else null
-        } catch (_: Exception) {
-            null
-        }
+        } catch (_: Exception) { null }
     }
 
-    Scaffold(
-        modifier = modifier,
-        containerColor = Color(0xFFF8F9FA)
-    ) { innerPadding ->
+    Scaffold(modifier = modifier, containerColor = Color(0xFFF8F9FA)) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
+            modifier = Modifier.fillMaxSize().padding(innerPadding)
+                .verticalScroll(rememberScrollState()).padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(24.dp))
-
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable { onBack() },
-                    tint = Color(0xFF2D3E50)
-                )
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back",
+                    modifier = Modifier.size(24.dp).clickable { onBack() }, tint = Color(0xFF2D3E50))
                 Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = "Detail Laporan",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2D3E50)
-                )
+                Text("Detail Laporan", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2D3E50))
             }
-
             Spacer(modifier = Modifier.height(24.dp))
-
-            // Image Section
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageByteArray)
-                    .crossfade(true)
-                    .build(),
+                model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                    .data(imageByteArray).crossfade(true).build(),
                 contentDescription = report.judulLaporan,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFFE2E8F0)),
+                modifier = Modifier.fillMaxWidth().height(220.dp)
+                    .clip(RoundedCornerShape(24.dp)).background(Color(0xFFE2E8F0)),
                 contentScale = ContentScale.Crop
             )
-
             Spacer(modifier = Modifier.height(20.dp))
-
-            // Title dan Status Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
-            ) {
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
+                    Row(modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = report.judulLaporan,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1E293B),
-                            modifier = Modifier.weight(1f)
-                        )
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text(report.judulLaporan, fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1E293B), modifier = Modifier.weight(1f))
                         StatusBadge(status = report.status)
                     }
-
                     Spacer(modifier = Modifier.height(16.dp))
-
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         UrgencyBadge(urgency = report.tingkatUrgensi)
                         CategoryBadge(category = report.kategoriKerusakan)
                     }
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Info Card
             InfoSectionCard(icon = Icons.Default.LocationOn, label = "LOKASI", value = report.lokasi)
             Spacer(modifier = Modifier.height(16.dp))
             InfoSectionCard(icon = Icons.Default.DateRange, label = "TANGGAL LAPOR", value = report.tanggal)
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Description Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
-            ) {
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = "DESKRIPSI",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF94A3B8),
-                        letterSpacing = 1.sp
-                    )
+                    Text("DESKRIPSI", fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                        color = Color(0xFF94A3B8), letterSpacing = 1.sp)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = report.deskripsi,
-                        fontSize = 15.sp,
-                        color = Color(0xFF475569),
-                        lineHeight = 22.sp
-                    )
+                    Text(report.deskripsi, fontSize = 15.sp, color = Color(0xFF475569), lineHeight = 22.sp)
                 }
             }
-
-            // Catatan Admin
             if (report.statusAdmin.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F9FF)), // Light blue background
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F9FF)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBAE6FD))
-                ) {
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBAE6FD))) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.SpeakerNotes,
-                                contentDescription = null,
-                                tint = Color(0xFF0369A1),
-                                modifier = Modifier.size(18.dp)
-                            )
+                            Icon(Icons.AutoMirrored.Filled.SpeakerNotes, contentDescription = null,
+                                tint = Color(0xFF0369A1), modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "CATATAN ADMIN",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0369A1),
-                                letterSpacing = 1.sp
-                            )
+                            Text("CATATAN ADMIN", fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0369A1), letterSpacing = 1.sp)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = report.statusAdmin,
-                            fontSize = 15.sp,
-                            color = Color(0xFF0C4A6E),
-                            fontWeight = FontWeight.Medium,
-                            lineHeight = 22.sp
-                        )
+                        Text(report.statusAdmin, fontSize = 15.sp, color = Color(0xFF0C4A6E),
+                            fontWeight = FontWeight.Medium, lineHeight = 22.sp)
                     }
                 }
             }
-
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
@@ -255,44 +165,20 @@ fun DetailLaporanContent(
 
 @Composable
 fun InfoSectionCard(icon: ImageVector, label: String, value: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(Color(0xFFF0F9FF), RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp),
-                    tint = Color(0xFF0EA5E9)
-                )
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(44.dp).background(Color(0xFFF0F9FF), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center) {
+                Icon(imageVector = icon, contentDescription = null,
+                    modifier = Modifier.size(22.dp), tint = Color(0xFF0EA5E9))
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(
-                    text = label,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF94A3B8),
-                    letterSpacing = 1.sp
-                )
-                Text(
-                    text = value,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF1E293B)
-                )
+                Text(label, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                    color = Color(0xFF94A3B8), letterSpacing = 1.sp)
+                Text(value, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1E293B))
             }
         }
     }
@@ -308,18 +194,9 @@ fun StatusBadge(status: String) {
         "Menunggu" -> Color(0xFFFFF7ED) to Color(0xFFF59E0B)
         else -> Color(0xFFF1F5F9) to Color(0xFF64748B)
     }
-
-    Surface(
-        color = bgColor,
-        shape = RoundedCornerShape(50)
-    ) {
-        Text(
-            text = status,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = txtColor
-        )
+    Surface(color = bgColor, shape = RoundedCornerShape(50)) {
+        Text(status, modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+            fontSize = 12.sp, fontWeight = FontWeight.Bold, color = txtColor)
     }
 }
 
@@ -331,44 +208,21 @@ fun UrgencyBadge(urgency: String) {
         "Rendah" -> Color(0xFFDCFCE7) to Color(0xFF22C55E)
         else -> Color(0xFFF1F5F9) to Color(0xFF64748B)
     }
-
-    Surface(
-        color = bgColor,
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Text(
-            text = urgency,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = txtColor
-        )
+    Surface(color = bgColor, shape = RoundedCornerShape(8.dp)) {
+        Text(urgency, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = txtColor)
     }
 }
 
 @Composable
 fun CategoryBadge(category: String) {
-    Surface(
-        color = Color(0xFFF1F5F9),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = null,
-                modifier = Modifier.size(12.dp),
-                tint = Color(0xFF64748B)
-            )
+    Surface(color = Color(0xFFF1F5F9), shape = RoundedCornerShape(8.dp)) {
+        Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Info, contentDescription = null,
+                modifier = Modifier.size(12.dp), tint = Color(0xFF64748B))
             Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = category,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF475569)
-            )
+            Text(category, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF475569))
         }
     }
 }
