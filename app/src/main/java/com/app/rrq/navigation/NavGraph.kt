@@ -9,11 +9,13 @@ import androidx.navigation.navArgument
 import com.app.rrq.ui.auth.LoginScreen
 import com.app.rrq.ui.auth.RegisterScreen
 import com.app.rrq.ui.pages.*
+import com.app.rrq.ui.pages.admin.AdminNotifikasiPage
 import com.app.rrq.ui.pages.admin.DaftarLaporanPage
 import com.app.rrq.ui.pages.admin.KelolaPenggunaPage
 import com.app.rrq.ui.pages.admin.VerifikasiLaporanPage
 import com.app.rrq.ui.pages.user.BuatLaporanPage
 import com.app.rrq.ui.pages.user.DetailLaporanPage
+import com.app.rrq.ui.pages.user.NotifikasiPage
 import com.app.rrq.ui.pages.user.RiwayatLaporanPage
 
 object Routes {
@@ -29,16 +31,17 @@ object Routes {
     const val USER_PROFIL = "user_profil"
     const val USER_BUAT_LAPORAN = "user_buat_laporan"
     const val USER_RIWAYAT = "user_riwayat"
+    const val USER_NOTIFIKASI = "user_notifikasi"
 
-    const val USER_DETAIL_LAPORAN =
-        "user_detail_laporan/{reportIndex}"
+    const val USER_DETAIL_LAPORAN = "user_detail_laporan/{laporanId}"
 
     // ADMIN
     const val ADMIN_DASHBOARD = "admin_dashboard"
     const val ADMIN_PROFIL = "admin_profil"
     const val ADMIN_KELOLA_PENGGUNA = "admin_kelola_pengguna"
-    const val ADMIN_VERIFIKASI_LAPORAN = "admin_verifikasi_laporan"
+    const val ADMIN_VERIFIKASI_LAPORAN = "admin_verifikasi_laporan/{laporanId}"
     const val ADMIN_DAFTAR_LAPORAN = "admin_daftar_laporan"
+    const val ADMIN_NOTIFIKASI = "admin_notifikasi"
 }
 
 @Composable
@@ -94,11 +97,11 @@ fun AppNavHost(navController: NavHostController) {
         // USER
 
         composable(Routes.USER_DASHBOARD) {
-
             UserHomeScreen(
                 onNavigate = { index ->
                     handleUserNavigation(index, navController)
-                }
+                },
+                onNotifikasi = { navController.navigate(Routes.USER_NOTIFIKASI) }
             )
         }
 
@@ -116,11 +119,16 @@ fun AppNavHost(navController: NavHostController) {
                     handleUserNavigation(index, navController)
                 },
 
-                onNavigateToDetail = { index ->
-                    navController.navigate(
-                        "user_detail_laporan/$index"
-                    )
+                onNavigateToDetail = { id ->
+                    navController.navigate("user_detail_laporan/$id")
                 }
+            )
+        }
+
+        composable(Routes.USER_NOTIFIKASI) {
+            NotifikasiPage(
+                onBack = { navController.popBackStack() },
+                onNavigateToDetail = { id -> navController.navigate("user_detail_laporan/$id") }
             )
         }
 
@@ -128,17 +136,14 @@ fun AppNavHost(navController: NavHostController) {
             route = Routes.USER_DETAIL_LAPORAN,
 
             arguments = listOf(
-                navArgument("reportIndex") {
-                    type = NavType.IntType
-                }
+                navArgument("laporanId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
 
-            val reportIndex =
-                backStackEntry.arguments?.getInt("reportIndex") ?: 0
+            val laporanId = backStackEntry.arguments?.getString("laporanId") ?: ""
 
             DetailLaporanPage(
-                reportIndex = reportIndex,
+                laporanId = laporanId,
 
                 onBack = {
                     navController.popBackStack()
@@ -166,19 +171,27 @@ fun AppNavHost(navController: NavHostController) {
             AdminHomeScreen(
                 onNavigate = { index ->
                     handleAdminNavigation(index, navController)
-                }
+                },
+                onNotifikasi = { navController.navigate(Routes.ADMIN_NOTIFIKASI) }
             )
         }
 
-        composable(Routes.ADMIN_VERIFIKASI_LAPORAN) {
+        composable(Routes.ADMIN_NOTIFIKASI) {
+            AdminNotifikasiPage(
+                onBack = { navController.popBackStack() },
+                onNavigateToVerifikasi = { id -> navController.navigate("admin_verifikasi_laporan/$id") }
+            )
+        }
+
+        composable(
+            route = Routes.ADMIN_VERIFIKASI_LAPORAN,
+            arguments = listOf(navArgument("laporanId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val laporanId = backStackEntry.arguments?.getString("laporanId") ?: ""
             VerifikasiLaporanPage(
-                reportIndex = 0,
-                onNavigate = { index ->
-                    handleAdminNavigation(index, navController)
-                },
-                onBack = {
-                    navController.popBackStack()
-                }
+                laporanId = laporanId,
+                onNavigate = { index -> handleAdminNavigation(index, navController) },
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -206,9 +219,11 @@ fun AppNavHost(navController: NavHostController) {
 
         composable(Routes.ADMIN_DAFTAR_LAPORAN) {
             DaftarLaporanPage(
-                onNavigate = { index -> handleAdminNavigation(index, navController) }
+                onNavigate = { index -> handleAdminNavigation(index, navController) },
+                onNavigateToVerifikasi = { id -> navController.navigate("admin_verifikasi_laporan/$id") }
             )
         }
+
     }
 }
 
@@ -266,7 +281,7 @@ private fun handleAdminNavigation(
     val route = when (index) {
 
         0 -> Routes.ADMIN_DASHBOARD
-        1 -> Routes.ADMIN_VERIFIKASI_LAPORAN
+        1 -> Routes.ADMIN_DAFTAR_LAPORAN
         2 -> Routes.ADMIN_KELOLA_PENGGUNA
         3 -> Routes.ADMIN_PROFIL
 

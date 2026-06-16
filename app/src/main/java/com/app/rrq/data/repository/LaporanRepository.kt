@@ -25,8 +25,9 @@ class LaporanRepository {
             return
         }
         val data = laporan.copy(userId = userId)
-        laporanCollection
-            .add(data)
+        val docRef = laporanCollection.document()
+        val laporanWithId = data.copy(id = docRef.id)
+        docRef.set(laporanWithId)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { e -> onError(e.message ?: "Gagal mengirim laporan") }
     }
@@ -59,6 +60,30 @@ class LaporanRepository {
                     try { dateFormat.parse(laporan.tanggal) } catch (e: Exception) { null }
                 }
                 onResult(sortedList)
+            }
+    }
+
+    // Untuk admin: ambil SEMUA laporan dari semua user (tanpa filter userId)
+    fun getSemuaLaporanAdmin(onResult: (List<Laporan>) -> Unit) {
+        laporanCollection
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                val list = snapshot?.toObjects(Laporan::class.java) ?: emptyList()
+                val sortedList = list.sortedByDescending { laporan ->
+                    try { dateFormat.parse(laporan.tanggal) } catch (e: Exception) { null }
+                }
+                onResult(sortedList)
+            }
+    }
+
+    fun getLaporanById(id: String, onResult: (Laporan?) -> Unit) {
+        laporanCollection.document(id)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    onResult(null)
+                    return@addSnapshotListener
+                }
+                onResult(snapshot?.toObject(Laporan::class.java))
             }
     }
 

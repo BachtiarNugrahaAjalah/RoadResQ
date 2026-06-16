@@ -28,7 +28,7 @@ import com.app.rrq.ui.theme.*
 @Composable
 fun DaftarLaporanPage(
     onNavigate: (Int) -> Unit = {},
-    onNavigateToVerifikasi: (Int) -> Unit = {},
+    onNavigateToVerifikasi: (String) -> Unit = {},
     onReportsLoaded: (List<Laporan>) -> Unit = {}
 ) {
     var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
@@ -38,10 +38,10 @@ fun DaftarLaporanPage(
     val filters = listOf("Semua", "Menunggu", "Diverifikasi", "Diproses", "Selesai", "Ditolak")
 
     var isLoading by remember { mutableStateOf(true) }
-    
+
     LaunchedEffect(Unit) {
         isLoading = true
-        repository.getSemuaLaporan { list ->
+        repository.getSemuaLaporanAdmin { list ->
             allReports = list
             onReportsLoaded(list)
             isLoading = false
@@ -129,7 +129,7 @@ fun DaftarLaporanPage(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     itemsIndexed(filteredReports) { index, laporan ->
-                        LaporanCardCustom(laporan, onClick = { onNavigateToVerifikasi(allReports.indexOf(laporan)) })
+                        LaporanCardCustom(laporan, onClick = { onNavigateToVerifikasi(laporan.id) })
                     }
                 }
             }

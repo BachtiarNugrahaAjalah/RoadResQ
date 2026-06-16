@@ -31,7 +31,7 @@ import com.app.rrq.ui.theme.BackgroundGray
 fun RiwayatLaporanPage(
     modifier: Modifier = Modifier,
     onNavigate: (Int) -> Unit = {},
-    onNavigateToDetail: (Int) -> Unit = {},
+    onNavigateToDetail: (String) -> Unit = {},
     onReportsLoaded: (List<Laporan>) -> Unit = {}
 ) {
     var selectedFilter by remember { mutableStateOf("Semua") }
@@ -39,11 +39,11 @@ fun RiwayatLaporanPage(
     var isLoading by remember { mutableStateOf(true) }
     val repository = remember { LaporanRepository() }
 
-    val filteredReportsWithIndex = if (selectedFilter == "Semua") {
-        allReports.mapIndexed { index, report -> index to report }
+    val filteredReports = if (selectedFilter == "Semua") {
+        allReports
     } else {
-        allReports.mapIndexed { index, report -> index to report }
-            .filter { it.second.status == selectedFilter }
+        allReports
+        allReports.filter { it.status == selectedFilter }
     }
 
     LaunchedEffect(Unit) {
@@ -77,7 +77,7 @@ fun RiwayatLaporanPage(
                 color = Color(0xFF2D3E50)
             )
             Text(
-                text = "${filteredReportsWithIndex.size} laporan",
+                text = "${filteredReports.size} laporan",
                 fontSize = 15.sp,
                 color = Color(0xFF94A3B8)
             )
@@ -92,22 +92,22 @@ fun RiwayatLaporanPage(
             Spacer(modifier = Modifier.height(24.dp))
 
             if (isLoading) {
-                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                     CircularProgressIndicator(color = Color(0xFF088395))
-                 }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color(0xFF088395))
+                }
             } else if (allReports.isEmpty()) {
-                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                     Text("Belum ada riwayat laporan", color = Color(0xFF64748B))
-                 }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Belum ada riwayat laporan", color = Color(0xFF64748B))
+                }
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(filteredReportsWithIndex) { (originalIndex, report) ->
+                    items(filteredReports) { report ->
                         LaporanCardItem(
                             report = report,
-                            onClick = { onNavigateToDetail(originalIndex) }
+                            onClick = { onNavigateToDetail(report.id) }
                         )
                     }
                 }

@@ -35,7 +35,8 @@ fun AppRoot(isAdmin: Boolean = false) {
 
 @Composable
 fun UserHomeScreen(
-    onNavigate: (Int) -> Unit = {}
+    onNavigate: (Int) -> Unit = {},
+    onNotifikasi: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val session = remember { com.app.rrq.data.local.SessionManager(context) }
@@ -43,9 +44,9 @@ fun UserHomeScreen(
 
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    // Load laporan terbaru milik user yang login
     var laporanTerbaru by remember { mutableStateOf<List<com.app.rrq.data.model.Laporan>>(emptyList()) }
     val repository = remember { com.app.rrq.data.repository.LaporanRepository() }
+
     LaunchedEffect(Unit) {
         repository.getSemuaLaporan { list ->
             laporanTerbaru = list.take(3)
@@ -113,7 +114,7 @@ fun UserHomeScreen(
                                 fontSize = 13.sp
                             )
                         }
-                        BellButton(iconRes = R.drawable.ic_bell)
+                        BellButton(iconRes = R.drawable.ic_bell, onClick = onNotifikasi)
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -334,7 +335,8 @@ fun ReportItemCard(
 
 @Composable
 fun AdminHomeScreen(
-    onNavigate: (Int) -> Unit = {}
+    onNavigate: (Int) -> Unit = {},
+    onNotifikasi: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val session = remember { com.app.rrq.data.local.SessionManager(context) }
@@ -399,7 +401,7 @@ fun AdminHomeScreen(
                                 fontSize = 13.sp
                             )
                         }
-                        BellButton(iconRes = R.drawable.ic_bell)
+                        BellButton(iconRes = R.drawable.ic_bell, onClick = onNotifikasi)
                     }
                 }
             }
@@ -622,19 +624,19 @@ fun AdminBottomBar(selected: Int, onSelect: (Int) -> Unit) {
 }
 
 @Composable
-fun BellButton(@DrawableRes iconRes: Int) {
+fun BellButton(@DrawableRes iconRes: Int, onClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .size(42.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(Color.White.copy(alpha = 0.2f))
-            .clickable { },
+            .clickable { onClick() },  // ← panggil onClick
         contentAlignment = Alignment.Center
     ) {
         Image(
-            painter     = painterResource(id = iconRes),
+            painter = painterResource(id = iconRes),
             contentDescription = "Notifikasi",
-            modifier    = Modifier.size(22.dp),
+            modifier = Modifier.size(22.dp),
             colorFilter = ColorFilter.tint(Color.White)
         )
     }
