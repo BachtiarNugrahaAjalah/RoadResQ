@@ -68,6 +68,7 @@ fun EditProfilPage(
     var photoUri by remember { mutableStateOf<Uri?>(null) }
     val photoUrl = remember { session.getPhotoUrl() }
     var showPhotoOptions by remember { mutableStateOf(false) }
+    var photoUploaded by remember { mutableStateOf(false) }
 
     // Launcher untuk pilih gambar dari galeri
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -75,7 +76,10 @@ fun EditProfilPage(
     ) { uri: Uri? ->
         uri?.let {
             photoUri = it
-            viewModel.uploadFoto(context, it) { }
+            photoUploaded = false
+            viewModel.uploadFoto(context, it) {
+                photoUploaded = true
+            }
         }
     }
 
@@ -351,8 +355,12 @@ fun EditProfilPage(
                     if (email != session.getEmail()) {
                         pendingEmail = email
                         showPasswordDialog = true
-                    } else if (nama == session.getNama()) {
+                    } else if (nama == session.getNama() && !photoUploaded) {
                         Toast.makeText(context, "Tidak ada perubahan", Toast.LENGTH_SHORT).show()
+                    } else if (nama == session.getNama() && photoUploaded) {
+                        // Foto sudah diupload, nama dan email tidak berubah
+                        Toast.makeText(context, "Foto profil berhasil disimpan!", Toast.LENGTH_SHORT).show()
+                        photoUploaded = false
                     }
                 },
                 modifier = Modifier

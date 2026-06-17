@@ -77,8 +77,10 @@ class AuthRepository {
                             val role = doc.getString("role") ?: "user"
                             val nama = doc.getString("name") ?: doc.getString("nama") ?: ""
                             val telepon = doc.getString("phone") ?: doc.getString("telepon") ?: ""
+                            val photoUrl = doc.getString("photoUrl") ?: ""
                             
                             session.saveUser(nama, email, telepon, role.lowercase(), uid)
+                            session.savePhotoUrl(photoUrl)
                             onResult(Resource.Success(role.lowercase()))
                         } else {
                             auth.signOut() // Logout user jika data tidak ada (terhapus)
@@ -115,7 +117,8 @@ class AuthRepository {
                     "phone" to telepon,
                     "role" to "USER",
                     "status" to "AKTIF",
-                    "date" to currentDate
+                    "date" to currentDate,
+                    "photoUrl" to ""
                 )
                 
                 firestore.collection("users").document(uid)

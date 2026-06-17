@@ -11,6 +11,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,11 +48,15 @@ fun UserProfileScreen(
 
     var selectedTab by remember { mutableIntStateOf(3) }
 
-    // Refresh data dari sesi setiap kali layar ini aktif
-    LaunchedEffect(Unit) {
-        nama = session.getNama()
-        email = session.getEmail()
-        photoUrl = session.getPhotoUrl()
+    // Refresh data setiap kali layar menjadi RESUMED (misal: kembali dari EditProfil)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleState by lifecycleOwner.lifecycle.currentStateAsState()
+    LaunchedEffect(lifecycleState) {
+        if (lifecycleState == Lifecycle.State.RESUMED) {
+            nama = session.getNama()
+            email = session.getEmail()
+            photoUrl = session.getPhotoUrl()
+        }
     }
 
     Scaffold(
@@ -181,11 +188,15 @@ fun AdminProfileScreen(
 
     var selectedTab by remember { mutableIntStateOf(3) }
 
-    // Refresh data dari sesi setiap kali layar ini aktif
-    LaunchedEffect(Unit) {
-        nama = session.getNama()
-        email = session.getEmail()
-        photoUrl = session.getPhotoUrl()
+    // Refresh data setiap kali layar menjadi RESUMED (misal: kembali dari EditProfil)
+    val lifecycleOwner2 = LocalLifecycleOwner.current
+    val lifecycleState2 by lifecycleOwner2.lifecycle.currentStateAsState()
+    LaunchedEffect(lifecycleState2) {
+        if (lifecycleState2 == Lifecycle.State.RESUMED) {
+            nama = session.getNama()
+            email = session.getEmail()
+            photoUrl = session.getPhotoUrl()
+        }
     }
 
     Scaffold(

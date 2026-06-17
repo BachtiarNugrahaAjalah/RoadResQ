@@ -114,21 +114,32 @@ class ProfilViewModel : ViewModel() {
         val session = SessionManager(context)
         val uid = session.getUid()
         if (uid.isBlank()) {
-            _state.value = ProfilState.Error("Sesi tidak valid")
+            _state.value = ProfilState.Error("Sesi tidak valid, silakan login ulang")
             return
         }
         _state.value = ProfilState.Loading
         viewModelScope.launch {
-            val result = repository.uploadFotoProfil(uid, imageUri)
+            val result = repository.uploadFotoProfil(context, uid, imageUri)
             if (result.isSuccess) {
                 val url = result.getOrDefault("")
                 session.savePhotoUrl(url)
                 _state.value = ProfilState.Success
                 onSuccess(url)
             } else {
-                _state.value = ProfilState.Error(
-                    result.exceptionOrNull()?.message ?: "Gagal mengunggah foto"
-                )
+                val errMsg = result.exceptionOrNull()?.message ?: "Gagal mengunggah foto"
+                // Pesan error yang lebih ramah pengguna
+                val friendlyMsg = when {
+                    errMsg.contains("object-not-found", ignoreCase = true) ||
+                    errMsg.contains("does not exist", ignoreCase = true) ->
+                        "Gagal menyimpan foto. Pastikan koneksi internet stabil dan coba lagi."
+                    errMsg.contains("unauthorized", ignoreCase = true) ||
+                    errMsg.contains("permission", ignoreCase = true) ->
+                        "Tidak memiliki izin untuk mengupload foto."
+                    errMsg.contains("canceled", ignoreCase = true) ->
+                        "Upload foto dibatalkan."
+                    else -> errMsg
+                }
+                _state.value = ProfilState.Error(friendlyMsg)
             }
         }
     }
