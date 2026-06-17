@@ -1,19 +1,15 @@
 package com.app.rrq.data.repository
 
-import android.content.Context
-import android.net.Uri
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 
 class ProfileRepository {
 
     private val auth: FirebaseAuth get() = FirebaseAuth.getInstance()
     private val firestore: FirebaseFirestore get() = FirebaseFirestore.getInstance()
-    private val storage: FirebaseStorage get() = FirebaseStorage.getInstance()
 
     /** Update nama pengguna di Firestore */
     suspend fun updateNama(uid: String, namaBaru: String): Result<Unit> {
@@ -86,32 +82,15 @@ class ProfileRepository {
     }
 
     /**
-     * Upload foto profil ke Firebase Storage dan simpan URL ke Firestore.
-     * Menggunakan putBytes agar tidak bergantung pada akses URI langsung
-     * yang sering menyebabkan error "object does not exist".
+     * Simpan foto profil sebagai string base64 ke Firestore.
+     * Tidak memerlukan Firebase Storage — konsisten dengan pendekatan gambar laporan.
      */
-    suspend fun uploadFotoProfil(context: Context, uid: String, imageUri: Uri): Result<String> {
+    suspend fun simpanFotoBase64(uid: String, base64: String): Result<String> {
         return try {
-            // Baca file menjadi ByteArray via ContentResolver
-            // Ini memastikan file dapat diakses sebelum dikirim ke Firebase
-            val bytes = context.contentResolver.openInputStream(imageUri)
-                ?.use { it.readBytes() }
-                ?: return Result.failure(Exception("Tidak dapat membaca file gambar"))
-
-            val ref = storage.reference.child("profile_photos/$uid")
-
-            // Upload menggunakan bytes (bukan URI) — lebih handal
-            val uploadTask = ref.putBytes(bytes).await()
-
-            // Ambil download URL dari storage reference hasil upload
-            val downloadUrl = uploadTask.storage.downloadUrl.await().toString()
-
-            // Simpan URL ke Firestore (set+merge agar aman untuk field baru maupun lama)
             firestore.collection("users").document(uid)
-                .set(mapOf("photoUrl" to downloadUrl), SetOptions.merge())
+                .set(mapOf("photoBase64" to base64), SetOptions.merge())
                 .await()
-
-            Result.success(downloadUrl)
+            Result.success(base64)
         } catch (e: Exception) {
             Result.failure(e)
         }

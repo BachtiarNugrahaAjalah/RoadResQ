@@ -77,10 +77,14 @@ class AuthRepository {
                             val role = doc.getString("role") ?: "user"
                             val nama = doc.getString("name") ?: doc.getString("nama") ?: ""
                             val telepon = doc.getString("phone") ?: doc.getString("telepon") ?: ""
-                            val photoUrl = doc.getString("photoUrl") ?: ""
-                            
+                            // Prioritas: photoBase64 (format baru), fallback ke photoUrl (format lama)
+                            val photoData = doc.getString("photoBase64")
+                                ?.takeIf { it.isNotEmpty() }
+                                ?: doc.getString("photoUrl")
+                                ?: ""
+
                             session.saveUser(nama, email, telepon, role.lowercase(), uid)
-                            session.savePhotoUrl(photoUrl)
+                            session.savePhotoUrl(photoData)
                             onResult(Resource.Success(role.lowercase()))
                         } else {
                             auth.signOut() // Logout user jika data tidak ada (terhapus)

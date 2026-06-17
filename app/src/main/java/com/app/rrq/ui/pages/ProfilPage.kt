@@ -85,7 +85,7 @@ fun UserProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Avatar – foto profil atau inisial
+                    // Avatar – foto profil (base64/URL) atau inisial
                     Box(
                         modifier = Modifier
                             .size(80.dp)
@@ -93,9 +93,10 @@ fun UserProfileScreen(
                             .background(Color.White.copy(alpha = 0.25f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (photoUrl.isNotEmpty()) {
+                        val fotoPainter = rememberProfilPhotoPainter(photoUrl)
+                        if (fotoPainter != null) {
                             Image(
-                                painter = rememberAsyncImagePainter(photoUrl),
+                                painter = fotoPainter,
                                 contentDescription = "Foto Profil",
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
@@ -227,7 +228,7 @@ fun AdminProfileScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(contentAlignment = Alignment.BottomEnd) {
-                        // Avatar
+                        // Avatar Admin
                         Box(
                             modifier = Modifier
                                 .size(80.dp)
@@ -235,9 +236,10 @@ fun AdminProfileScreen(
                                 .background(Color.White.copy(alpha = 0.25f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (photoUrl.isNotEmpty()) {
+                            val fotoPainter = rememberProfilPhotoPainter(photoUrl)
+                            if (fotoPainter != null) {
                                 Image(
-                                    painter = rememberAsyncImagePainter(photoUrl),
+                                    painter = fotoPainter,
                                     contentDescription = "Foto Profil",
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop

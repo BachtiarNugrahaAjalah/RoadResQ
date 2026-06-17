@@ -1,8 +1,10 @@
 package com.app.rrq.ui.pages
 
 import android.Manifest
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
+import android.util.Base64
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,6 +29,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -66,7 +70,8 @@ fun EditProfilPage(
 
     // Foto profil
     var photoUri by remember { mutableStateOf<Uri?>(null) }
-    val photoUrl = remember { session.getPhotoUrl() }
+    // Reactive state: diperbarui saat upload berhasil agar avatar langsung berubah
+    var fotoBase64 by remember { mutableStateOf(session.getPhotoUrl()) }
     var showPhotoOptions by remember { mutableStateOf(false) }
     var photoUploaded by remember { mutableStateOf(false) }
 
@@ -77,7 +82,9 @@ fun EditProfilPage(
         uri?.let {
             photoUri = it
             photoUploaded = false
-            viewModel.uploadFoto(context, it) {
+            viewModel.uploadFoto(context, it) { base64 ->
+                // Update state reaktif agar avatar langsung tampil tanpa perlu back-and-forth
+                fotoBase64 = base64
                 photoUploaded = true
             }
         }
@@ -180,20 +187,33 @@ fun EditProfilPage(
                             contentAlignment = Alignment.Center
                         ) {
                             val displayUri = photoUri
-                            val displayUrl = photoUrl
                             when {
+                                // Prioritas 1: preview lokal URI (baru dipilih, sedang diproses)
                                 displayUri != null -> Image(
                                     painter = rememberAsyncImagePainter(displayUri),
                                     contentDescription = "Foto Profil",
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
-                                displayUrl.isNotEmpty() -> Image(
-                                    painter = rememberAsyncImagePainter(displayUrl),
-                                    contentDescription = "Foto Profil",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
+                                // Prioritas 2: base64 atau http URL dari sesi
+                                fotoBase64.isNotEmpty() -> {
+                                    val painter = rememberProfilPhotoPainter(fotoBase64)
+                                    if (painter != null) {
+                                        Image(
+                                            painter = painter,
+                                            contentDescription = "Foto Profil",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        Text(
+                                            text = if (nama.isNotEmpty()) nama[0].toString().uppercase() else "?",
+                                            fontSize = 40.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                    }
+                                }
                                 else -> Text(
                                     text = if (nama.isNotEmpty()) nama[0].toString().uppercase() else "?",
                                     fontSize = 40.sp,
@@ -565,3 +585,27 @@ fun profileTextFieldColors() = OutlinedTextFieldDefaults.colors(
     unfocusedContainerColor = Color.White,
     cursorColor = TealPrimary
 )
+
+/**
+ * Mengembalikan Painter yang sesuai untuk data foto profil:
+ * - Jika diawali "http" → pakai Coil (remote URL)
+ * - Selainnya → decode base64 menjadi BitmapPainter
+ * Mengembalikan null jika data kosong atau gagal di-decode.
+ */
+@Composable
+fun rememberProfilPhotoPainter(
+    photoData: String
+): androidx.compose.ui.graphics.painter.Painter? {
+    if (photoData.isEmpty()) return null
+    return if (photoData.startsWith("http")) {
+        rememberAsyncImagePainter(photoData)
+    } else {
+        remember(photoData) {
+            runCatching {
+                val bytes = Base64.decode(photoData, Base64.NO_WRAP)
+                val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                bmp?.let { BitmapPainter(it.asImageBitmap()) }
+            }.getOrNull()
+        }
+    }
+}

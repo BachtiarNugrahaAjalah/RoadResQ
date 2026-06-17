@@ -1,15 +1,22 @@
 package com.app.rrq.model
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Base64
+import androidx.core.graphics.scale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.rrq.data.local.SessionManager
 import com.app.rrq.data.repository.ProfileRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 sealed class ProfilState {
     object Idle : ProfilState()
@@ -109,7 +116,10 @@ class ProfilViewModel : ViewModel() {
         }
     }
 
-    /** Upload foto profil ke Firebase Storage */
+    /**
+     * Konversi foto ke base64 di background, lalu simpan ke Firestore.
+     * Tidak memerlukan Firebase Storage — konsisten dengan pendekatan gambar laporan.
+     */
     fun uploadFoto(context: Context, imageUri: Uri, onSuccess: (String) -> Unit) {
         val session = SessionManager(context)
         val uid = session.getUid()
@@ -119,28 +129,48 @@ class ProfilViewModel : ViewModel() {
         }
         _state.value = ProfilState.Loading
         viewModelScope.launch {
-            val result = repository.uploadFotoProfil(context, uid, imageUri)
+            val base64 = uriToBase64(context, imageUri)
+            if (base64 == null) {
+                _state.value = ProfilState.Error("Gagal memproses gambar, coba pilih foto lain")
+                return@launch
+            }
+            val result = repository.simpanFotoBase64(uid, base64)
             if (result.isSuccess) {
-                val url = result.getOrDefault("")
-                session.savePhotoUrl(url)
+                session.savePhotoUrl(base64)
                 _state.value = ProfilState.Success
-                onSuccess(url)
+                onSuccess(base64)
             } else {
-                val errMsg = result.exceptionOrNull()?.message ?: "Gagal mengunggah foto"
-                // Pesan error yang lebih ramah pengguna
-                val friendlyMsg = when {
-                    errMsg.contains("object-not-found", ignoreCase = true) ||
-                    errMsg.contains("does not exist", ignoreCase = true) ->
-                        "Gagal menyimpan foto. Pastikan koneksi internet stabil dan coba lagi."
-                    errMsg.contains("unauthorized", ignoreCase = true) ||
-                    errMsg.contains("permission", ignoreCase = true) ->
-                        "Tidak memiliki izin untuk mengupload foto."
-                    errMsg.contains("canceled", ignoreCase = true) ->
-                        "Upload foto dibatalkan."
-                    else -> errMsg
-                }
-                _state.value = ProfilState.Error(friendlyMsg)
+                _state.value = ProfilState.Error(
+                    result.exceptionOrNull()?.message ?: "Gagal menyimpan foto"
+                )
             }
         }
     }
+
+    /** Konversi URI gambar menjadi string base64 yang sudah di-resize dan dikompresi */
+    private suspend fun uriToBase64(context: Context, uri: Uri): String? =
+        withContext(Dispatchers.IO) {
+            try {
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    val originalBitmap = BitmapFactory.decodeStream(inputStream)
+                        ?: return@withContext null
+                    val maxSize = 400
+                    val width = originalBitmap.width
+                    val height = originalBitmap.height
+                    val bitmap = if (width > maxSize || height > maxSize) {
+                        val ratio = width.toFloat() / height.toFloat()
+                        val newWidth = if (width > height) maxSize else (maxSize * ratio).toInt()
+                        val newHeight = if (height > width) maxSize else (maxSize / ratio).toInt()
+                        originalBitmap.scale(newWidth, newHeight, true)
+                    } else {
+                        originalBitmap
+                    }
+                    val outputStream = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
+                    Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+                }
+            } catch (e: Exception) {
+                null
+            }
+        }
 }
