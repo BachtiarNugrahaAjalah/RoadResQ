@@ -39,6 +39,11 @@ object Routes {
     const val ADMIN_VERIFIKASI_LAPORAN = "admin_verifikasi_laporan/{laporanId}"
     const val ADMIN_DAFTAR_LAPORAN = "admin_daftar_laporan"
     const val ADMIN_NOTIFIKASI = "admin_notifikasi"
+
+    // SHARED
+    const val EDIT_PROFIL = "edit_profil"
+    const val PRIVASI_KEAMANAN = "privasi_keamanan"
+    const val BANTUAN = "bantuan"
 }
 
 @Composable
@@ -136,7 +141,10 @@ fun AppNavHost(navController: NavHostController) {
         composable(Routes.USER_PROFIL) {
             UserProfileScreen(
                 onNavigate = { index -> handleUserNavigation(index, navController) },
-                onLogout = { performLogout(navController) }
+                onLogout = { performLogout(navController) },
+                onEditProfil = { navController.navigate(Routes.EDIT_PROFIL) },
+                onPrivasiKeamanan = { navController.navigate(Routes.PRIVASI_KEAMANAN) },
+                onBantuan = { navController.navigate(Routes.BANTUAN) }
             )
         }
 
@@ -176,8 +184,24 @@ fun AppNavHost(navController: NavHostController) {
         composable(Routes.ADMIN_PROFIL) {
             AdminProfileScreen(
                 onNavigate = { index -> handleAdminNavigation(index, navController) },
-                onLogout = { performLogout(navController) }
+                onLogout = { performLogout(navController) },
+                onEditProfil = { navController.navigate(Routes.EDIT_PROFIL) },
+                onPrivasiKeamanan = { navController.navigate(Routes.PRIVASI_KEAMANAN) },
+                onBantuan = { navController.navigate(Routes.BANTUAN) }
             )
+        }
+
+        // SHARED PROFIL PAGES
+        composable(Routes.EDIT_PROFIL) {
+            EditProfilPage(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.PRIVASI_KEAMANAN) {
+            PrivasiKeamananPage(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.BANTUAN) {
+            BantuanPage(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.ADMIN_DAFTAR_LAPORAN) {

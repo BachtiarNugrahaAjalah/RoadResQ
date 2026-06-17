@@ -24,5 +24,11 @@ class SessionManager(context: Context) {
     fun getRole(): String = prefs.getString("role", "user") ?: "user"
     fun getUid(): String = prefs.getString("uid", "") ?: ""
 
+    // Update individual fields
+    fun saveNama(nama: String) = prefs.edit().putString("nama", nama).apply()
+    fun saveEmail(email: String) = prefs.edit().putString("email", email).apply()
+    fun savePhotoUrl(url: String) = prefs.edit().putString("photo_url", url).apply()
+    fun getPhotoUrl(): String = prefs.getString("photo_url", "") ?: ""
+
     fun clear() = prefs.edit().clear().apply()
 }
