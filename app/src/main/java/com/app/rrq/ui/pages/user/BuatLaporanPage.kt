@@ -1,5 +1,8 @@
 package com.app.rrq.ui.pages.user
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -130,6 +133,10 @@ fun BuatLaporanPage(
 
             Button(
                 onClick = {
+                    if (!isInternetAvailable(context)) {
+                        Toast.makeText(context, "Tidak ada koneksi internet", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
                     viewModel.kirimLaporan(
                         onSuccess = {
                             Toast.makeText(context, "Laporan berhasil dikirim", Toast.LENGTH_SHORT).show()
@@ -153,6 +160,13 @@ fun BuatLaporanPage(
             }
         }
     }
+}
+
+private fun isInternetAvailable(context: Context): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }
 
 @Composable
