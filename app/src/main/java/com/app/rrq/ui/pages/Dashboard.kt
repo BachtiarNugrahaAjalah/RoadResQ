@@ -39,17 +39,26 @@ fun UserHomeScreen(
     val session = remember { com.app.rrq.data.local.SessionManager(context) }
     val nama = session.getNama()
 
-    var laporanList by remember { mutableStateOf<List<com.app.rrq.data.model.Laporan>>(emptyList()) }
+    var statLaporanList by remember { mutableStateOf<List<com.app.rrq.data.model.Laporan>>(emptyList()) }
+    var laporanTerbaru by remember { mutableStateOf<List<com.app.rrq.data.model.Laporan>>(emptyList()) }
     val repository = remember { com.app.rrq.data.repository.LaporanRepository() }
 
     DisposableEffect(Unit) {
-        val registration = repository.getSemuaLaporan { list ->
-            laporanList = list
+        // 1. Ambil data seminimal mungkin untuk daftar terbaru (Hanya 3 dokumen)
+        val regTerbaru = repository.getLaporanTerbaru { list ->
+            laporanTerbaru = list
         }
-        onDispose { registration?.remove() }
+        
+        // 2. Ambil semua untuk hitung statistik (dikirim, diproses, selesai)
+        val regAll = repository.getSemuaLaporan { list ->
+            statLaporanList = list
+        }
+        
+        onDispose { 
+            regTerbaru?.remove()
+            regAll?.remove() 
+        }
     }
-
-    val laporanTerbaru = laporanList.take(3)
 
     Scaffold(
         containerColor = BackgroundGray,
@@ -75,9 +84,9 @@ fun UserHomeScreen(
                         Box(modifier = Modifier.padding(start = 12.dp)) { BellButton(iconRes = R.drawable.ic_bell, onClick = onNotifikasi) }
                     }
                     Spacer(modifier = Modifier.height(20.dp))
-                    val dikirim  = laporanList.count { it.status == "Menunggu" || it.status == "Diverifikasi" }
-                    val diproses = laporanList.count { it.status == "Diproses" }
-                    val selesai  = laporanList.count { it.status == "Selesai" }
+                    val dikirim  = statLaporanList.count { it.status == "Menunggu" || it.status == "Diverifikasi" }
+                    val diproses = statLaporanList.count { it.status == "Diproses" }
+                    val selesai  = statLaporanList.count { it.status == "Selesai" }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         UserStatCard(label = "Dikirim", value = dikirim.toString(), color = TealPrimary, modifier = Modifier.weight(1f))
                         UserStatCard(label = "Diproses", value = diproses.toString(), color = OrangeAccent, modifier = Modifier.weight(1f))
@@ -255,7 +264,7 @@ fun AdminHomeScreen(
 fun ReportItemCard(title: String, subtitle: String, imageUrl: String, @DrawableRes trailIconRes: Int, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     val imageModel = remember(imageUrl) {
         if (imageUrl.startsWith("http")) imageUrl
-        else if (imageUrl.isNotBlank()) { try { Base64.decode(imageUrl, Base64.DEFAULT) } catch (e: Exception) { null } }
+        else if (imageUrl.isNotBlank()) { try { Base64.decode(imageUrl, Base64.DEFAULT) } catch (_: Exception) { null } }
         else null
     }
     Card(modifier = modifier.fillMaxWidth().clickable { onClick() }, shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = CardWhite), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {

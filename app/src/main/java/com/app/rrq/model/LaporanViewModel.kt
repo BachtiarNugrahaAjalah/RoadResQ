@@ -68,7 +68,7 @@ class LaporanViewModel : ViewModel() {
         try {
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 val originalBitmap = BitmapFactory.decodeStream(inputStream) ?: return@withContext null
-                val maxSize = 350
+                val maxSize = 1024
                 val width = originalBitmap.width
                 val height = originalBitmap.height
                 val bitmap = if (width > maxSize || height > maxSize) {
@@ -80,7 +80,7 @@ class LaporanViewModel : ViewModel() {
                     originalBitmap
                 }
                 val outputStream = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 40, outputStream)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
                 Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
             }
         } catch (e: Exception) {

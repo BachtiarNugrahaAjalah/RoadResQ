@@ -34,5 +34,8 @@ data class Laporan(
     var tanggal: String = "",
 
     @get:PropertyName("StatusAdmin") @set:PropertyName("StatusAdmin") @PropertyName("StatusAdmin")
-    var statusAdmin: String = ""
+    var statusAdmin: String = "",
+
+    @get:PropertyName("timestamp") @set:PropertyName("timestamp") @PropertyName("timestamp")
+    var timestamp: Long = 0L
 )
