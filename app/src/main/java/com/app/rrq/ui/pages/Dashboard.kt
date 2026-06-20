@@ -141,7 +141,7 @@ fun AdminHomeScreen(
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(text = "Halo Admin,", color = Color.White.copy(alpha = 0.85f), fontSize = 14.sp)
-                            Text("Admin RoadResQ", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                            Text(text = nama, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 24.sp)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text("Pantau & verifikasi laporan masuk hari ini.", color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
                         }

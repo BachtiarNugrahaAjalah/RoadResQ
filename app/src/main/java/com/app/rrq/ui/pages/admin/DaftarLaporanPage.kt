@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -34,6 +35,7 @@ fun DaftarLaporanPage(
     var allReports by remember { mutableStateOf<List<Laporan>>(emptyList()) }
     val repository = remember { LaporanRepository() }
 
+    var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("Semua") }
     val filters = listOf("Semua", "Menunggu", "Diverifikasi", "Diproses", "Selesai", "Ditolak")
 
@@ -48,10 +50,11 @@ fun DaftarLaporanPage(
         }
     }
 
-    val filteredReports = if (selectedFilter == "Semua") {
-        allReports
-    } else {
-        allReports.filter { it.status == selectedFilter }
+    val filteredReports = allReports.filter { laporan ->
+        val matchesFilter = selectedFilter == "Semua" || laporan.status == selectedFilter
+        val matchesSearch = laporan.judulLaporan.contains(searchQuery, ignoreCase = true) ||
+                laporan.lokasi.contains(searchQuery, ignoreCase = true)
+        matchesFilter && matchesSearch
     }
 
     Scaffold(
@@ -80,8 +83,8 @@ fun DaftarLaporanPage(
             }
 
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
                 placeholder = { Text("Cari laporan, lokasi...", color = TextSecondary) },
                 leadingIcon = {
                     Icon(
@@ -89,6 +92,17 @@ fun DaftarLaporanPage(
                         contentDescription = null,
                         tint = TextSecondary
                     )
+                },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Clear",
+                                tint = TextSecondary
+                            )
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,7 +113,8 @@ fun DaftarLaporanPage(
                     unfocusedContainerColor = Color(0xFFF3F4F6),
                     focusedBorderColor = Color.Transparent,
                     unfocusedBorderColor = Color.Transparent,
-                )
+                ),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(16.dp))
