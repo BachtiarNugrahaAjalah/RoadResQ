@@ -35,7 +35,7 @@ class UserRepository {
                             role = Role.valueOf(roleStr),
                             status = Status.valueOf(statusStr)
                         )
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         null
                     }
                 } ?: emptyList()
