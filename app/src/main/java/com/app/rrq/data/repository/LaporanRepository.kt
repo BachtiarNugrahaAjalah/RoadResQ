@@ -4,6 +4,7 @@ import com.app.rrq.data.model.Laporan
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -15,30 +16,16 @@ class LaporanRepository {
     private val laporanCollection = db.collection("laporan")
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-    fun kirimLaporan(
-        laporan: Laporan,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        val userId = auth.currentUser?.uid
-        if (userId == null) {
-            onError("User belum login")
-            return
-        }
-        val data = laporan.copy(userId = userId)
-        val docRef = laporanCollection.document()
-        val laporanWithId = data.copy(id = docRef.id)
-        docRef.set(laporanWithId)
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { e -> onError(e.message ?: "Gagal mengirim laporan") }
-    }
-
     suspend fun simpanLaporan(laporan: Laporan): Result<Unit> {
         return try {
             val userId = auth.currentUser?.uid
                 ?: return Result.failure(Exception("User belum login"))
             val docRef = laporanCollection.document()
-            val laporanWithId = laporan.copy(id = docRef.id, userId = userId)
+            val laporanWithId = laporan.copy(
+                id = docRef.id, 
+                userId = userId,
+                timestamp = System.currentTimeMillis()
+            )
             docRef.set(laporanWithId).await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -57,10 +44,29 @@ class LaporanRepository {
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
                 val list = snapshot?.toObjects(Laporan::class.java) ?: emptyList()
-                val sortedList = list.sortedByDescending { laporan ->
-                    try { dateFormat.parse(laporan.tanggal) } catch (e: Exception) { null }
-                }
+                val sortedList = list.sortedWith(
+                    compareByDescending<Laporan> { it.timestamp }
+                        .thenByDescending { laporan ->
+                            try { dateFormat.parse(laporan.tanggal) } catch (_: Exception) { null }
+                        }
+                )
                 onResult(sortedList)
+            }
+    }
+
+    fun getLaporanTerbaru(onResult: (List<Laporan>) -> Unit): ListenerRegistration? {
+        val userId = auth.currentUser?.uid ?: return null
+        return laporanCollection
+            .whereEqualTo("userId", userId)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .limit(3)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    getSemuaLaporan { all -> onResult(all.take(3)) }
+                    return@addSnapshotListener
+                }
+                val list = snapshot?.toObjects(Laporan::class.java) ?: emptyList()
+                onResult(list)
             }
     }
 
@@ -69,9 +75,12 @@ class LaporanRepository {
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
                 val list = snapshot?.toObjects(Laporan::class.java) ?: emptyList()
-                val sortedList = list.sortedByDescending { laporan ->
-                    try { dateFormat.parse(laporan.tanggal) } catch (e: Exception) { null }
-                }
+                val sortedList = list.sortedWith(
+                    compareByDescending<Laporan> { it.timestamp }
+                        .thenByDescending { laporan ->
+                            try { dateFormat.parse(laporan.tanggal) } catch (_: Exception) { null }
+                        }
+                )
                 onResult(sortedList)
             }
     }
@@ -83,9 +92,6 @@ class LaporanRepository {
                     onResult(null)
                     return@addSnapshotListener
                 }
-                if (snapshot?.metadata?.hasPendingWrites() == true) {
-                    return@addSnapshotListener
-                }
                 onResult(snapshot?.toObject(Laporan::class.java))
             }
     }
@@ -94,7 +100,7 @@ class LaporanRepository {
         return try {
             val snapshot = laporanCollection.document(id).get().await()
             snapshot.toObject(Laporan::class.java)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
