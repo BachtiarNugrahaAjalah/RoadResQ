@@ -7,7 +7,12 @@ import com.app.rrq.data.local.SessionManager
 import com.app.rrq.data.model.request.LoginRequest
 import com.app.rrq.data.model.response.LoginResponse
 import com.app.rrq.data.remote.retrofit.ApiClient
+import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.firestore.FirebaseFirestore
 import org.json.JSONObject
 import retrofit2.Call
@@ -61,13 +66,13 @@ class AuthRepository {
         auth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener { authResult ->
                 val uid = authResult.user?.uid ?: return@addOnSuccessListener
-                
+
                 // Ambil data dari Firestore
                 firestore.collection("users").document(uid).get()
                     .addOnSuccessListener { doc ->
                         if (doc.exists()) {
                             val status = doc.getString("status") ?: "AKTIF"
-                            
+
                             if (status == "BANNED") {
                                 auth.signOut() // Logout user karena diblokir
                                 onResult(Resource.Error("Akun Anda telah di-banned. Silakan hubungi admin."))
@@ -92,11 +97,30 @@ class AuthRepository {
                         }
                     }
                     .addOnFailureListener { e ->
-                        onResult(Resource.Error(e.message ?: "Gagal mengambil data profil"))
+                        val message = if (e is FirebaseFirestoreException &&
+                            e.code == FirebaseFirestoreException.Code.UNAVAILABLE
+                        ) {
+                            "Tidak dapat terhubung ke internet. Periksa koneksi Anda."
+                        } else {
+                            e.message ?: "Gagal mengambil data profil"
+                        }
+                        onResult(Resource.Error(message))
                     }
             }
             .addOnFailureListener { e ->
-                onResult(Resource.Error("Email atau password salah"))
+                val message = when {
+                    e is FirebaseNetworkException ->
+                        "Tidak dapat terhubung ke internet. Periksa koneksi Anda."
+                    e is FirebaseAuthException && e.errorCode == "ERROR_TOO_MANY_REQUESTS" ->
+                        "Terlalu banyak percobaan login. Coba lagi beberapa saat lagi."
+                    e is FirebaseAuthInvalidUserException ->
+                        "Akun dengan email tersebut tidak ditemukan."
+                    e is FirebaseAuthInvalidCredentialsException ->
+                        "Email atau password salah."
+                    else ->
+                        e.message ?: "Login gagal. Silakan coba lagi."
+                }
+                onResult(Resource.Error(message))
             }
     }
 
@@ -110,7 +134,7 @@ class AuthRepository {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { authResult ->
                 val uid = authResult.user?.uid ?: return@addOnSuccessListener
-                
+
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 val currentDate = dateFormat.format(Date())
 
@@ -124,7 +148,7 @@ class AuthRepository {
                     "date" to currentDate,
                     "photoUrl" to ""
                 )
-                
+
                 firestore.collection("users").document(uid)
                     .set(userData)
                     .addOnSuccessListener { onResult(Resource.Success(Unit)) }
