@@ -1,8 +1,5 @@
 package com.app.rrq.ui.pages.user
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -37,6 +34,7 @@ import coil.compose.AsyncImage
 import com.app.rrq.ui.pages.UserBottomBar
 import com.app.rrq.ui.theme.BackgroundGray
 import com.app.rrq.model.LaporanViewModel
+import com.app.rrq.utils.NetworkUtils.isInternetAvailable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -160,13 +158,6 @@ fun BuatLaporanPage(
             }
         }
     }
-}
-
-private fun isInternetAvailable(context: Context): Boolean {
-    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val network = connectivityManager.activeNetwork ?: return false
-    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }
 
 @Composable
