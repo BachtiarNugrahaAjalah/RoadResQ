@@ -41,12 +41,15 @@ fun DaftarLaporanPage(
 
     var isLoading by remember { mutableStateOf(true) }
 
-    LaunchedEffect(Unit) {
+    DisposableEffect(Unit) {
         isLoading = true
-        repository.getSemuaLaporanAdmin { list ->
+        val registration = repository.getSemuaLaporanAdmin { list ->
             allReports = list
             onReportsLoaded(list)
             isLoading = false
+        }
+        onDispose {
+            registration.remove()
         }
     }
 

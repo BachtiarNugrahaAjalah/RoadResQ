@@ -25,6 +25,7 @@ import com.app.rrq.ui.theme.*
 import com.app.rrq.data.model.User
 import com.app.rrq.data.model.Status
 import com.app.rrq.data.repository.UserRepository
+import com.app.rrq.utils.NetworkUtils.isInternetAvailable
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +37,6 @@ fun KelolaPenggunaPage(onNavigate: (Int) -> Unit = {}) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    
     var loadingUserId by remember { mutableStateOf<String?>(null) }
     var loadingAction by remember { mutableStateOf<String?>(null) }
 
@@ -119,7 +119,9 @@ fun KelolaPenggunaPage(onNavigate: (Int) -> Unit = {}) {
                         isDeleteLoading = loadingUserId == user.userId && loadingAction == "delete",
                         onBan = {
                             if (!isInternetAvailable(context)) {
-                                scope.launch { snackbarHostState.showSnackbar("Tidak ada koneksi internet") }
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Tidak ada koneksi internet")
+                                }
                                 return@UserCardCustom
                             }
                             scope.launch {
@@ -136,7 +138,9 @@ fun KelolaPenggunaPage(onNavigate: (Int) -> Unit = {}) {
                         },
                         onDelete = {
                             if (!isInternetAvailable(context)) {
-                                scope.launch { snackbarHostState.showSnackbar("Tidak ada koneksi internet") }
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Tidak ada koneksi internet")
+                                }
                                 return@UserCardCustom
                             }
                             scope.launch {

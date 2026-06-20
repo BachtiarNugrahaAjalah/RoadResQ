@@ -1,8 +1,5 @@
 package com.app.rrq.ui.pages.admin
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.util.Base64
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -32,13 +29,13 @@ import coil.request.ImageRequest
 import com.app.rrq.data.model.Laporan
 import com.app.rrq.data.repository.LaporanRepository
 import com.app.rrq.ui.theme.TextPrimary
+import com.app.rrq.utils.NetworkUtils.isInternetAvailable
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VerifikasiLaporanPage(
     laporanId: String,
-    onNavigate: (Int) -> Unit = {},
     onBack: () -> Unit = {}
 ) {
     var laporan by remember { mutableStateOf<Laporan?>(null) }
@@ -97,7 +94,7 @@ fun VerifikasiLaporanPage(
                         val base64Data = data.gambarUrl.substringAfter("base64,").trim()
                         Base64.decode(base64Data, Base64.DEFAULT)
                     } else null
-                } catch (e: Exception) { null }
+                } catch (_: Exception) { null }
             }
 
             Column(
@@ -392,13 +389,6 @@ fun VerifikasiLaporanPage(
             }
         }
     }
-}
-
-fun isInternetAvailable(context: Context): Boolean {
-    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val network = connectivityManager.activeNetwork ?: return false
-    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }
 
 @Composable
