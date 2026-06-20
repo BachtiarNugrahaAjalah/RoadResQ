@@ -83,8 +83,20 @@ class LaporanRepository {
                     onResult(null)
                     return@addSnapshotListener
                 }
+                if (snapshot?.metadata?.hasPendingWrites() == true) {
+                    return@addSnapshotListener
+                }
                 onResult(snapshot?.toObject(Laporan::class.java))
             }
+    }
+
+    suspend fun getLaporanByIdOnce(id: String): Laporan? {
+        return try {
+            val snapshot = laporanCollection.document(id).get().await()
+            snapshot.toObject(Laporan::class.java)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     suspend fun updateStatusLaporan(

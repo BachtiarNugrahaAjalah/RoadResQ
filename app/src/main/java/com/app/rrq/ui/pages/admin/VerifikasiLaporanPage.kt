@@ -1,5 +1,8 @@
 package com.app.rrq.ui.pages.admin
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.util.Base64
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -44,12 +47,11 @@ fun VerifikasiLaporanPage(
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        repository.getLaporanById(laporanId) { result ->
-            laporan = result
-            isLoading = false
-        }
+        laporan = repository.getLaporanByIdOnce(laporanId)
+        isLoading = false
     }
 
     Scaffold(
@@ -86,7 +88,6 @@ fun VerifikasiLaporanPage(
             var isUpdating by remember { mutableStateOf(false) }
             var isSavingCatatan by remember { mutableStateOf(false) }
 
-            // Logika: Tampilkan catatan HANYA jika sudah diverifikasi (Diverifikasi, Diproses, Selesai)
             val isVerified = data.status != "Menunggu" && data.status != "Ditolak"
             val canEditNote = data.status == "Diverifikasi" || data.status == "Diproses"
 
@@ -144,8 +145,8 @@ fun VerifikasiLaporanPage(
                         InfoRowAdmin(Icons.Default.DateRange, "TANGGAL", data.tanggal)
                     }
                 }
-                
-                // --- BAGIAN CATATAN ADMIN (Hanya tampil jika sudah diverifikasi) ---
+
+                // BAGIAN CATATAN ADMIN (Hanya tampil jika sudah diverifikasi)
                 if (isVerified) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(
@@ -153,19 +154,26 @@ fun VerifikasiLaporanPage(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            "Catatan Admin",
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
+                        Text("Catatan Admin", fontWeight = FontWeight.Bold, color = TextPrimary)
                         if (canEditNote) {
                             TextButton(
                                 onClick = {
+                                    if (!isInternetAvailable(context)) {
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar("Tidak ada koneksi internet")
+                                        }
+                                        return@TextButton
+                                    }
                                     focusManager.clearFocus()
                                     coroutineScope.launch {
                                         isSavingCatatan = true
-                                        repository.updateStatusLaporan(data.id, data.status, catatanAdmin)
-                                        snackbarHostState.showSnackbar("Catatan berhasil disimpan")
+                                        val result = repository.updateStatusLaporan(data.id, data.status, catatanAdmin)
+                                        if (result.isSuccess) {
+                                            laporan = data.copy(statusAdmin = catatanAdmin)
+                                            snackbarHostState.showSnackbar("Catatan berhasil disimpan")
+                                        } else {
+                                            snackbarHostState.showSnackbar("Gagal menyimpan catatan, cek koneksi internet")
+                                        }
                                         isSavingCatatan = false
                                     }
                                 },
@@ -206,11 +214,21 @@ fun VerifikasiLaporanPage(
                     "Menunggu" -> {
                         Button(
                             onClick = {
+                                if (!isInternetAvailable(context)) {
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar("Tidak ada koneksi internet")
+                                    }
+                                    return@Button
+                                }
                                 coroutineScope.launch {
                                     isUpdating = true
-                                    repository.updateStatusLaporan(data.id, "Diverifikasi", "")
-                                    laporan = data.copy(status = "Diverifikasi")
-                                    snackbarHostState.showSnackbar("Laporan diverifikasi")
+                                    val result = repository.updateStatusLaporan(data.id, "Diverifikasi", "")
+                                    if (result.isSuccess) {
+                                        laporan = data.copy(status = "Diverifikasi", statusAdmin = "")
+                                        snackbarHostState.showSnackbar("Laporan diverifikasi")
+                                    } else {
+                                        snackbarHostState.showSnackbar("Gagal memverifikasi, cek koneksi internet")
+                                    }
                                     isUpdating = false
                                 }
                             },
@@ -219,9 +237,20 @@ fun VerifikasiLaporanPage(
                             enabled = !isUpdating
                         ) { Text("Verifikasi Laporan", color = Color.White) }
                         Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedButton(onClick = { showDialogTolak = true },
+                        OutlinedButton(
+                            onClick = {
+                                if (!isInternetAvailable(context)) {
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar("Tidak ada koneksi internet")
+                                    }
+                                    return@OutlinedButton
+                                }
+                                showDialogTolak = true
+                            },
                             modifier = Modifier.fillMaxWidth(),
-                            border = BorderStroke(1.dp, Color.Red), enabled = !isUpdating) {
+                            border = BorderStroke(1.dp, Color.Red),
+                            enabled = !isUpdating
+                        ) {
                             Text("Tolak Laporan", color = Color.Red)
                         }
                     }
@@ -236,9 +265,21 @@ fun VerifikasiLaporanPage(
                                 selectedColor = Color(0xFF1E40AF)
                             ) {
                                 if (data.status != "Diproses") {
-                                    coroutineScope.launch { 
-                                        repository.updateStatusLaporan(data.id, "Diproses", catatanAdmin)
-                                        laporan = data.copy(status = "Diproses", statusAdmin = catatanAdmin)
+                                    if (!isInternetAvailable(context)) {
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar("Tidak ada koneksi internet")
+                                        }
+                                        return@StatusOptionButtonAdmin
+                                    }
+                                    coroutineScope.launch {
+                                        isUpdating = true
+                                        val result = repository.updateStatusLaporan(data.id, "Diproses", catatanAdmin)
+                                        if (result.isSuccess) {
+                                            laporan = data.copy(status = "Diproses", statusAdmin = catatanAdmin)
+                                        } else {
+                                            snackbarHostState.showSnackbar("Gagal update status, cek koneksi internet")
+                                        }
+                                        isUpdating = false
                                     }
                                 }
                             }
@@ -248,9 +289,23 @@ fun VerifikasiLaporanPage(
                                 Modifier.weight(1f),
                                 selectedColor = Color(0xFF166534)
                             ) {
-                                coroutineScope.launch { 
-                                    repository.updateStatusLaporan(data.id, "Selesai", catatanAdmin)
-                                    laporan = data.copy(status = "Selesai", statusAdmin = catatanAdmin)
+                                if (data.status != "Selesai") {
+                                    if (!isInternetAvailable(context)) {
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar("Tidak ada koneksi internet")
+                                        }
+                                        return@StatusOptionButtonAdmin
+                                    }
+                                    coroutineScope.launch {
+                                        isUpdating = true
+                                        val result = repository.updateStatusLaporan(data.id, "Selesai", catatanAdmin)
+                                        if (result.isSuccess) {
+                                            laporan = data.copy(status = "Selesai", statusAdmin = catatanAdmin)
+                                        } else {
+                                            snackbarHostState.showSnackbar("Gagal update status, cek koneksi internet")
+                                        }
+                                        isUpdating = false
+                                    }
                                 }
                             }
                         }
@@ -304,23 +359,46 @@ fun VerifikasiLaporanPage(
                             placeholder = { Text("Alasan penolakan...") })
                     },
                     confirmButton = {
-                        Button(onClick = {
-                            coroutineScope.launch {
-                                repository.updateStatusLaporan(data.id, "Ditolak", alasanTolak)
-                                laporan = data.copy(status = "Ditolak", statusAdmin = alasanTolak)
-                                showDialogTolak = false
-                            }
-                        }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                        Button(
+                            onClick = {
+                                if (!isInternetAvailable(context)) {
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar("Tidak ada koneksi internet")
+                                    }
+                                    return@Button
+                                }
+                                coroutineScope.launch {
+                                    isUpdating = true
+                                    val result = repository.updateStatusLaporan(data.id, "Ditolak", alasanTolak)
+                                    if (result.isSuccess) {
+                                        laporan = data.copy(status = "Ditolak", statusAdmin = alasanTolak)
+                                        showDialogTolak = false
+                                    } else {
+                                        snackbarHostState.showSnackbar("Gagal menolak laporan, cek koneksi internet")
+                                    }
+                                    isUpdating = false
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                            enabled = !isUpdating
+                        ) {
                             Text("Tolak", color = Color.White)
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showDialogTolak = false }) { Text("Batal") }
+                        TextButton(onClick = { showDialogTolak = false }, enabled = !isUpdating) { Text("Batal") }
                     }
                 )
             }
         }
     }
+}
+
+fun isInternetAvailable(context: Context): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }
 
 @Composable
