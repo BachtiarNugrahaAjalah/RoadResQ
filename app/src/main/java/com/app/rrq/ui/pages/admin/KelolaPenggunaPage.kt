@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,7 +23,6 @@ import androidx.compose.ui.unit.sp
 import com.app.rrq.ui.pages.AdminBottomBar
 import com.app.rrq.ui.theme.*
 import com.app.rrq.data.model.User
-import com.app.rrq.data.model.Role
 import com.app.rrq.data.model.Status
 import com.app.rrq.data.repository.UserRepository
 import kotlinx.coroutines.launch
@@ -34,6 +34,11 @@ fun KelolaPenggunaPage(onNavigate: (Int) -> Unit = {}) {
     var userList by remember { mutableStateOf<List<User>>(emptyList()) }
     val repository = remember { UserRepository() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    var loadingUserId by remember { mutableStateOf<String?>(null) }
+    var loadingAction by remember { mutableStateOf<String?>(null) }
 
     DisposableEffect(Unit) {
         val registration = repository.getSemuaUser { list ->
@@ -51,6 +56,7 @@ fun KelolaPenggunaPage(onNavigate: (Int) -> Unit = {}) {
 
     Scaffold(
         containerColor = BackgroundGray,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             AdminBottomBar(selected = selectedTab, onSelect = {
                 selectedTab = it
@@ -109,14 +115,40 @@ fun KelolaPenggunaPage(onNavigate: (Int) -> Unit = {}) {
                 items(filteredList) { user ->
                     UserCardCustom(
                         user = user,
+                        isBanLoading = loadingUserId == user.userId && loadingAction == "ban",
+                        isDeleteLoading = loadingUserId == user.userId && loadingAction == "delete",
                         onBan = {
+                            if (!isInternetAvailable(context)) {
+                                scope.launch { snackbarHostState.showSnackbar("Tidak ada koneksi internet") }
+                                return@UserCardCustom
+                            }
                             scope.launch {
-                                repository.banUser(user.email, user.status)
+                                loadingUserId = user.userId
+                                loadingAction = "ban"
+                                val result = repository.banUser(user.email, user.status)
+
+                                loadingUserId = null
+                                loadingAction = null
+
+                                val msg = if (result.isSuccess) "Status ${user.name} diperbarui" else "Gagal update status"
+                                snackbarHostState.showSnackbar(msg)
                             }
                         },
                         onDelete = {
+                            if (!isInternetAvailable(context)) {
+                                scope.launch { snackbarHostState.showSnackbar("Tidak ada koneksi internet") }
+                                return@UserCardCustom
+                            }
                             scope.launch {
-                                repository.deleteUser(user.email)
+                                loadingUserId = user.userId
+                                loadingAction = "delete"
+                                val result = repository.deleteUser(user.email)
+                                
+                                loadingUserId = null
+                                loadingAction = null
+                                
+                                val msg = if (result.isSuccess) "User ${user.name} dihapus" else "Gagal menghapus user"
+                                snackbarHostState.showSnackbar(msg)
                             }
                         }
                     )
@@ -129,6 +161,8 @@ fun KelolaPenggunaPage(onNavigate: (Int) -> Unit = {}) {
 @Composable
 fun UserCardCustom(
     user: User,
+    isBanLoading: Boolean,
+    isDeleteLoading: Boolean,
     onBan: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -185,19 +219,6 @@ fun UserCardCustom(
                                 color = statusColor
                             )
                         }
-
-                        Surface(
-                            color = TealLight,
-                            shape = RoundedCornerShape(50)
-                        ) {
-                            Text(
-                                text = user.role.value,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TealPrimary
-                            )
-                        }
                     }
                 }
             }
@@ -218,37 +239,55 @@ fun UserCardCustom(
                 val isBanned = user.status == Status.BANNED
                 OutlinedButton(
                     onClick = onBan,
+                    enabled = !isBanLoading && !isDeleteLoading,
                     modifier = Modifier.weight(1f).height(48.dp),
                     shape = RoundedCornerShape(14.dp),
                     border = BorderStroke(1.dp, if (isBanned) TealPrimary.copy(alpha = 0.5f) else Color(0xFFFBBF24).copy(alpha = 0.5f))
                 ) {
-                    Icon(
-                        if (isBanned) Icons.Default.CheckCircle else Icons.Default.Block,
-                        contentDescription = null,
-                        tint = if (isBanned) TealPrimary else Color(0xFFD97706),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        if (isBanned) "Aktifkan" else "Ban", 
-                        color = if (isBanned) TealPrimary else Color(0xFFD97706)
-                    )
+                    if (isBanLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = if (isBanned) TealPrimary else Color(0xFFD97706)
+                        )
+                    } else {
+                        Icon(
+                            if (isBanned) Icons.Default.CheckCircle else Icons.Default.Block,
+                            contentDescription = null,
+                            tint = if (isBanned) TealPrimary else Color(0xFFD97706),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            if (isBanned) "Aktifkan" else "Ban",
+                            color = if (isBanned) TealPrimary else Color(0xFFD97706)
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 OutlinedButton(
                     onClick = onDelete,
+                    enabled = !isBanLoading && !isDeleteLoading,
                     modifier = Modifier.weight(1f).height(48.dp),
                     shape = RoundedCornerShape(14.dp),
                     border = BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.2f))
                 ) {
-                    Icon(
-                        Icons.Default.DeleteOutline,
-                        contentDescription = null,
-                        tint = Color(0xFFEF4444),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Hapus", color = Color(0xFFEF4444))
+                    if (isDeleteLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = Color(0xFFEF4444)
+                        )
+                    } else {
+                        Icon(
+                            Icons.Default.DeleteOutline,
+                            contentDescription = null,
+                            tint = Color(0xFFEF4444),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Hapus", color = Color(0xFFEF4444))
+                    }
                 }
             }
         }
